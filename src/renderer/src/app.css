@@ -1,0 +1,1904 @@
+/* ============================================================================
+   Design tokens
+   The kit's own variables carry the whole palette; this file only re-points the
+   brand and adds the handful of tokens the kit has no opinion about (spacing,
+   the dial, the per-task accents).
+   ========================================================================= */
+
+:root,
+[data-mz-theme='dark'] {
+  /* Ember. A timer counting down reads as warmth burning off, and it keeps the
+     app clear of the violet every shadcn build ships with. The kit mixes the
+     brand into its neutrals, so the greys turn warm charcoal with it. */
+  --mz-primary-rgb: 235, 150, 66;
+  --mz-primary-fg: #1c1206;
+
+  --accent-amber: 235, 150, 66;
+  --accent-violet: 168, 124, 248;
+  --accent-emerald: 52, 211, 153;
+  --accent-sky: 56, 189, 248;
+  --accent-rose: 255, 100, 130;
+  --accent-slate: 148, 163, 184;
+
+  /* Depth and light, the two constants every shadow and every glare in this
+     file derives from — so nothing invents its own black or its own white. */
+  --shade-rgb: 2, 2, 12;
+  --glare-rgb: 255, 255, 255;
+
+  /* Floating glass. Panels (rail, topbar, statistics, dialogs) blur the
+     ambient field behind them; cards use the same fill with a lighter blur.
+     `strong` is for chrome that must read instantly: dialogs and toasts. */
+  --glass-bg: rgba(20, 20, 32, 0.52);
+  --glass-bg-hover: rgba(30, 30, 46, 0.6);
+  --glass-bg-strong: rgba(26, 26, 40, 0.74);
+  --glass-border: rgba(var(--glare-rgb), 0.1);
+  --glass-highlight: rgba(var(--glare-rgb), 0.09);
+  --glass-shadow: 0 16px 40px -18px rgba(var(--shade-rgb), 0.8);
+  --glass-shadow-card: 0 8px 24px -14px rgba(var(--shade-rgb), 0.6);
+  --glass-blur: 18px;
+  --glass-blur-card: 10px;
+
+  /* The ambient field the glass lives over: the brand hues, barely awake.
+     Glass over a flat colour reads as grey plastic — it needs this. */
+  --ambient:
+    radial-gradient(52% 44% at 12% 6%, rgba(var(--accent-amber), 0.16), transparent 70%),
+    radial-gradient(50% 46% at 92% 22%, rgba(var(--accent-violet), 0.12), transparent 72%),
+    radial-gradient(56% 50% at 70% 96%, rgba(var(--accent-sky), 0.09), transparent 70%),
+    var(--mz-bg);
+
+  /* The timer's groove, shaded across its own cross-section: lips level with
+     the surface, walls falling away, the floor deepest and darkest. The
+     shade/glare pair adds the light's direction on top. */
+  --dial-well-lip: color-mix(in srgb, var(--mz-ink) 13%, transparent);
+  --dial-well-wall: rgba(var(--shade-rgb), 0.38);
+  --dial-well-floor: rgba(var(--shade-rgb), 0.66);
+  --dial-well-shade: rgba(var(--shade-rgb), 0.38);
+  --dial-well-glare: rgba(var(--glare-rgb), 0.07);
+}
+
+[data-mz-theme='light'] {
+  /* Lightened against the dark value: the kit darkens a filled surface to 80%
+     on press, and below this the near-black label drops under 4.5:1. */
+  --mz-primary-rgb: 214, 126, 34;
+  --mz-primary-fg: #1c1206;
+
+  --accent-amber: 194, 106, 20;
+  --accent-violet: 124, 74, 232;
+  --accent-emerald: 16, 175, 122;
+  --accent-sky: 14, 145, 214;
+  --accent-rose: 226, 60, 92;
+  --accent-slate: 100, 116, 139;
+
+  --shade-rgb: 34, 32, 60;
+  --glare-rgb: 255, 255, 255;
+
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-bg-hover: rgba(255, 255, 255, 0.7);
+  --glass-bg-strong: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(var(--glare-rgb), 0.65);
+  --glass-highlight: rgba(var(--glare-rgb), 0.85);
+  --glass-shadow: 0 16px 40px -20px rgba(var(--shade-rgb), 0.35);
+  --glass-shadow-card: 0 8px 24px -16px rgba(var(--shade-rgb), 0.3);
+  --glass-blur: 18px;
+  --glass-blur-card: 10px;
+
+  --ambient:
+    radial-gradient(52% 44% at 12% 6%, rgba(var(--accent-amber), 0.18), transparent 70%),
+    radial-gradient(50% 46% at 92% 22%, rgba(var(--accent-violet), 0.14), transparent 72%),
+    radial-gradient(56% 50% at 70% 96%, rgba(var(--accent-sky), 0.12), transparent 70%),
+    var(--mz-bg);
+
+  --dial-well-lip: rgba(var(--glare-rgb), 0.9);
+  --dial-well-wall: color-mix(in srgb, var(--mz-ink) 15%, transparent);
+  --dial-well-floor: color-mix(in srgb, var(--mz-ink) 31%, transparent);
+  --dial-well-shade: color-mix(in srgb, var(--mz-ink) 30%, transparent);
+  --dial-well-glare: rgba(var(--glare-rgb), 0.6);
+}
+
+:root {
+  --mz-radius: 9px;
+  --mz-radius-sm: 6px;
+  --mz-radius-lg: 14px;
+  --mz-radius-xl: 18px;
+
+  /* Density 7/10 — a working surface, not a landing page. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --rail-w: 268px;
+  --stats-w: 300px;
+  --dial-size: 244px;
+
+  --label-size: 11px;
+  --label-tracking: 0.07em;
+}
+
+/* ============================================================================
+   Base
+   ========================================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--mz-font-sans);
+  background: var(--ambient);
+  color: var(--mz-text);
+  overflow: hidden;
+  /* A desktop chrome, not a document: nothing here is meant to be selected. */
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+input,
+textarea {
+  user-select: text;
+}
+
+/* macOS-style scrollbars: the gutter is always reserved so nothing reflows,
+   but the thumb is invisible until the surface is actually being scrolled
+   (the `.scrolling` class, set by a global listener in App) or the pointer
+   is over the scrollbar itself. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+}
+.scrolling::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--mz-ink) 14%, transparent);
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--mz-ink) 24%, transparent);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Every surface that scrolls keeps a focused control clear of its sticky head. */
+.scroll-y {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-padding-block: var(--space-5);
+}
+
+.label {
+  font-size: var(--label-size);
+  font-weight: 600;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--mz-text-muted);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================================================
+   App shell — three zones: templates rail | timer + queue | statistics
+   ========================================================================= */
+
+.shell {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  height: 100%;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--stats-w);
+  min-width: 0;
+  height: 100%;
+  transition: grid-template-columns var(--mz-duration) var(--mz-ease);
+}
+
+.workspace[data-stats='collapsed'] {
+  grid-template-columns: minmax(0, 1fr) 0px;
+}
+
+/* DOM order puts the right sidebar first (it reads first: day total, then
+   controls); the grid places it visually to the right of the canvas. */
+.workspace > .column {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.rightbar {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* The track shrinks; the panels inside keep their width and are clipped.
+   Animating the column width alone would re-wrap every label on the way out. */
+.stats-slot {
+  flex: 1 1 auto;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Below this the third column starves the queue; statistics move into a
+   drawer, and the right sidebar degrades to a full-width topbar row. */
+@media (max-width: 1120px) {
+  .workspace,
+  .workspace[data-stats='open'] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .workspace > .column {
+    grid-row: 2;
+  }
+  .rightbar {
+    grid-column: 1;
+    grid-row: 1;
+    overflow: visible;
+  }
+  /* Doubled selector: the base .topbar rule sits later in the file, and this
+     override must outrank it, not lose on source order. */
+  .rightbar .topbar {
+    width: auto;
+    margin-inline-start: 0;
+  }
+  .stats-slot {
+    display: none;
+  }
+}
+
+/* Short windows: the dial gives ground so the queue keeps breathing room.
+   Everything inside the dial is proportional (viewBox units, percentages),
+   so rescaling is one token plus the clock type. */
+@media (max-height: 760px) {
+  :root {
+    --dial-size: 204px;
+  }
+  .stage {
+    padding: var(--space-4) var(--space-5) var(--space-3);
+  }
+  .stage__full {
+    gap: var(--space-3);
+  }
+  .dial__time {
+    font-size: 40px;
+  }
+}
+
+/* Sized and placed like the statistics panel below it: one right sidebar. */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  flex: 0 0 auto;
+  width: calc(var(--stats-w) - var(--space-3));
+  max-height: 80px;
+  margin-inline-start: var(--space-3);
+  margin-bottom: var(--space-3);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--mz-radius-lg);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.25);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--glass-shadow);
+  transition:
+    max-height 0.35s var(--mz-ease),
+    opacity 0.25s var(--mz-ease),
+    margin 0.35s var(--mz-ease),
+    padding 0.35s var(--mz-ease);
+}
+
+/* Its contents have moved into the timer bar; the shell folds away and the
+   statistics rise into its place, level with the bar. */
+.rightbar--folded .topbar {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+  padding-block: 0;
+  border-color: transparent;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.topbar__spacer {
+  margin-left: auto;
+}
+
+/* The folded state: the control cluster keeps its corner, shrunk to content.
+   Same glass, so it reads as the topbar's remnant, not a new control. */
+.topbar--floating {
+  position: absolute;
+  inset-block-start: var(--space-3);
+  inset-inline-end: var(--space-3);
+  width: auto;
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  z-index: 5;
+}
+
+/* The brand, relocated to the rail's head. */
+.rail__logo {
+  flex: 0 0 auto;
+  display: block;
+  /* The mark is greyscale, so it needs a touch of lift on the dark ground. */
+  filter: drop-shadow(0 1px 2px rgba(var(--shade-rgb), 0.35));
+}
+
+.rail__title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* The kit's secondary button, stretched to the rail's card width; collapsed,
+   the label hides and the plus stays centred on the icon rail. Full-width it
+   has no room to play the kit's hover scale — the rail's scroll container
+   would clip the overhang — so hover keeps only the fill change. */
+.rail__new {
+  width: 100%;
+}
+
+.rail__new:hover {
+  transform: none;
+}
+
+
+.column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* The dial's aurora is a positioned layer far larger than the dial itself;
+   anything that must stay readable is lifted above it here. The glow is not
+   clipped — it simply becomes background wherever content sits. The floating
+   topbar is excluded: this rule sits later in the cascade and would drag it
+   from `absolute` back into the flow. */
+.topbar:not(.topbar--floating),
+.queue-wrap,
+.stats-slot,
+.transport {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================================================
+   Templates rail
+   ========================================================================= */
+
+.rail__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.tpl {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  overflow: hidden;
+  padding: var(--space-3);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius);
+  background: var(--mz-face-fill);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: grab;
+  transition:
+    background var(--mz-duration) var(--mz-ease),
+    border-color var(--mz-duration) var(--mz-ease),
+    transform var(--mz-duration) var(--mz-ease);
+}
+
+.tpl:hover {
+  background: var(--mz-face-fill-hover);
+  border-color: var(--mz-border-strong);
+}
+
+.tpl:active {
+  cursor: grabbing;
+  transform: scale(0.99);
+}
+
+.tpl:focus-visible,
+.dropzone:focus-visible,
+.qitem:focus-visible {
+  outline: var(--mz-ring-width) solid rgb(var(--mz-primary-rgb));
+  outline-offset: var(--mz-ring-offset);
+}
+
+.tpl--dragging {
+  opacity: 0.4;
+}
+
+/* The card's colour identity: the same stripe as the queue cards carry,
+   mirrored to the right edge so the two lists read as one family facing
+   each other across the canvas. */
+.tpl__strip {
+  position: absolute;
+  inset-block: 12px;
+  inset-inline-end: 0;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+  background: rgba(var(--tone), 0.75);
+}
+
+/* The template's emoji, sitting where the avatar chip used to. Rendered as
+   a bundled Apple-artwork PNG (see EmojiIcon), not as a font glyph. */
+.tpl__icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tpl__icon img,
+.tpl__code img,
+.qitem__icon img,
+.icon-swatch img {
+  display: block;
+}
+
+/* The collapsed chip centres its text with text-align; a block image needs
+   the margins to do the same. */
+.tpl__code img {
+  margin-inline: auto;
+}
+
+/* In the rail the title is hidden, and a bare colour strip cannot tell six
+   templates apart — the emoji (or initials) come back as plain text. */
+.tpl__code {
+  display: none;
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgb(var(--tone));
+}
+
+.tpl__body {
+  min-width: 0;
+  flex: 1;
+}
+
+.tpl__title {
+  font-size: 13px;
+  font-weight: 500;
+  /* One line, ellipsised: a wrapped title would break the rail's rhythm. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tpl__meta {
+  font-size: 11px;
+  color: var(--mz-text-muted);
+  margin-top: 2px;
+}
+
+/* The colour chip standing in for the wireframe's `thumb`. */
+.thumb {
+  --thumb-size: 34px;
+  flex: 0 0 auto;
+  width: var(--thumb-size);
+  height: var(--thumb-size);
+  display: grid;
+  place-items: center;
+  border-radius: var(--mz-radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgb(var(--tone));
+  background: rgba(var(--tone), 0.14);
+  border: 1px solid rgba(var(--tone), 0.3);
+  box-shadow: inset 0 1px 0 rgba(var(--glare-rgb), 0.08);
+}
+
+.thumb--sm {
+  --thumb-size: 28px;
+  font-size: 12px;
+}
+
+.thumb--lg {
+  --thumb-size: 40px;
+  font-size: 15px;
+}
+
+/* Dashed add / drop affordance from the wireframe. */
+.dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-4);
+  border: 1.5px dashed var(--mz-border-strong);
+  border-radius: var(--mz-radius);
+  background: transparent;
+  color: var(--mz-text-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    border-color var(--mz-duration) var(--mz-ease),
+    background var(--mz-duration) var(--mz-ease),
+    color var(--mz-duration) var(--mz-ease);
+}
+
+.dropzone:hover {
+  color: var(--mz-text);
+  border-color: rgba(var(--mz-primary-rgb), 0.55);
+  background: rgba(var(--mz-primary-rgb), 0.06);
+}
+
+.dropzone--over {
+  border-color: rgb(var(--mz-primary-rgb));
+  border-style: solid;
+  background: rgba(var(--mz-primary-rgb), 0.1);
+  color: var(--mz-text);
+}
+
+.dropzone--tall {
+  min-height: 76px;
+}
+
+/* ============================================================================
+   Timer dial
+   ========================================================================= */
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Spacing lives inside .stage__full; the stage itself only frames the two
+     forms, and its padding eases down when the dial folds into the bar. */
+  gap: 0;
+  padding: var(--space-6) var(--space-5) var(--space-5);
+  flex: 0 0 auto;
+  transition: padding 0.35s var(--mz-ease);
+}
+
+/* Folded, the bar rises to the topbar's own line: same top edge (the inset
+   padding), matching height, and the queue's own measure — the bar reads as
+   the list's header, timer left, day total and controls right. */
+.stage--compact {
+  padding-block: 0 var(--space-2);
+}
+
+.dial {
+  position: relative;
+  width: var(--dial-size);
+  height: var(--dial-size);
+  display: grid;
+  place-items: center;
+}
+
+.dial__ring {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+  /* The arc's glow spills past the viewBox; an svg clips by default, which
+     would frame the glow in a square. */
+  overflow: visible;
+}
+
+/* Concave: the radial shade runs lip → wall → floor → wall → lip across the
+   stroke, so the trench is dug out identically at every angle. The blurred
+   shade/glare circles sit on top and say where the light comes from. */
+.dial__track {
+  fill: none;
+  stroke: url(#dial-well-shade);
+}
+
+.dial__well-stop-lip {
+  stop-color: var(--dial-well-lip);
+}
+
+.dial__well-stop-wall {
+  stop-color: var(--dial-well-wall);
+}
+
+.dial__well-stop-floor {
+  stop-color: var(--dial-well-floor);
+}
+
+.dial__track-shade {
+  fill: none;
+  stroke: var(--dial-well-shade);
+  filter: blur(1.5px);
+}
+
+.dial__track-glare {
+  fill: none;
+  stroke: var(--dial-well-glare);
+  filter: blur(1.5px);
+}
+
+/* Convex: the same profile inverted — edges sunk toward black, tone on the
+   flanks, a near-white crest down the middle — reading as a tube laid in the
+   trench. Two cast effects seat it there: a dark shadow dropped into the
+   groove and the tone's glow. The offsets look sideways because filters run
+   in the ring's pre-rotation coordinates: local (-2, 0) is screen-down. */
+.dial__arc {
+  fill: none;
+  stroke: url(#dial-arc-shade);
+  stroke-linecap: round;
+  filter: drop-shadow(-1.5px 0 1.5px rgba(var(--shade-rgb), 0.45)) drop-shadow(-2px 0 6px rgba(var(--tone), 0.4));
+  transition: stroke-dashoffset 0.9s linear;
+}
+
+.dial__arc-stop-edge {
+  stop-color: color-mix(in srgb, rgb(var(--tone)) 60%, #000);
+}
+
+.dial__arc-stop-flank {
+  stop-color: rgb(var(--tone));
+}
+
+.dial__arc-stop-crest {
+  stop-color: color-mix(in srgb, rgb(var(--tone)) 80%, #fff);
+}
+
+.dial__arc-sheen {
+  fill: none;
+  stroke: rgba(var(--glare-rgb), 0.08);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.9s linear;
+}
+
+/* Frosted glass instead of an opaque well: the aurora reads through it,
+   blurred past recognition, so the face stays alive without costing the
+   numbers their contrast. The well inset keeps the rim's depth. */
+.dial__face {
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+  box-shadow: var(--mz-well-inset);
+}
+
+/* ----------------------------------------------------------------------------
+   Aurora. Exists only while time is actually moving — a static glow behind a
+   paused timer reads as "running" at a glance, and with the state badges gone
+   this is what tells the two apart.
+
+   Construction: three vast colour fields — the task's tone and its two
+   analogous neighbours, pushed to poster vividness — plus a smaller hot core.
+   Each is an ellipse of pure radial falloff under heavy blur, screen-blended
+   so overlaps bloom into new colours instead of muddying. Each field roams
+   its own slow ease-in-out path (durations with no common factor, negative
+   phase offsets, `alternate` so there is no loop seam), which keeps the
+   composition from ever repeating or sitting still. Nothing is masked or
+   clipped: a field ends by fading, not by being cut. The frosted dial face
+   sits on top: the aurora reads through it blurred, numbers stay clean.
+   ------------------------------------------------------------------------- */
+/* The palette, derived from the accent so every task keeps its identity:
+   the tone and two neighbours a bare ±16° away — one hue, breathing.
+   With the hues this close, depth comes from lightness: one field deeper,
+   one lighter, a near-white hot core. Saturation is pinned high so even
+   the grey slate accent yields vivid colour. Shared with the compact bar's
+   miniature aurora. */
+.dial__smoke,
+.stage-bar__smoke {
+  --smoke-a: hsl(from rgb(var(--tone)) h 80 58);
+  --smoke-b: hsl(from rgb(var(--tone)) calc(h - 16) 84 50);
+  --smoke-c: hsl(from rgb(var(--tone)) calc(h + 16) 80 65);
+  --smoke-hot: hsl(from rgb(var(--tone)) h 85 72);
+}
+
+.dial__smoke {
+  position: absolute;
+  inset: -60%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s var(--mz-ease);
+}
+
+.dial--running .dial__smoke {
+  opacity: 1;
+}
+
+/* Screen blend needs a dark ground to bloom on; on white the fields switch
+   to multiply — ink soaking into paper — and step back further, since
+   saturated colour reads heavier on a light ground. */
+[data-mz-theme='light'] .dial__blob {
+  mix-blend-mode: multiply;
+}
+
+[data-mz-theme='light'] .dial--running .dial__smoke {
+  opacity: 0.65;
+}
+
+.dial__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(42px);
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
+/* Three fields and a core, placed off-balance around the dial. They are
+   ellipses, so the rotate in their roam genuinely reshapes them. */
+.dial__blob--1 {
+  left: 4%;
+  top: 2%;
+  width: 62%;
+  height: 54%;
+  background: radial-gradient(50% 50% at 50% 50%, var(--smoke-a) 14%, transparent 74%);
+  animation: blob-roam-1 21s ease-in-out -7s infinite alternate;
+}
+
+.dial__blob--2 {
+  right: 0;
+  top: 22%;
+  width: 56%;
+  height: 66%;
+  background: radial-gradient(50% 50% at 50% 50%, var(--smoke-b) 14%, transparent 76%);
+  animation: blob-roam-2 27s ease-in-out -13s infinite alternate;
+}
+
+.dial__blob--3 {
+  left: 16%;
+  bottom: 0;
+  width: 68%;
+  height: 54%;
+  background: radial-gradient(50% 50% at 50% 50%, var(--smoke-c) 14%, transparent 74%);
+  animation: blob-roam-3 33s ease-in-out -21s infinite alternate;
+}
+
+.dial__blob--4 {
+  left: 31%;
+  top: 30%;
+  width: 38%;
+  height: 42%;
+  background: radial-gradient(50% 50% at 50% 50%, var(--smoke-hot) 10%, transparent 70%);
+  filter: blur(34px);
+  animation: blob-roam-4 17s ease-in-out -5s infinite alternate;
+}
+
+/* Slow wander: translate is in the field's own box, scale swells and
+   shrinks, rotate leans the ellipse. Small numbers on purpose — the fields
+   drift, they do not fly. */
+@keyframes blob-roam-1 {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate(18%, 14%) scale(1.18) rotate(14deg);
+  }
+  100% {
+    transform: translate(-12%, 26%) scale(0.9) rotate(-10deg);
+  }
+}
+
+@keyframes blob-roam-2 {
+  0% {
+    transform: translate(0, 0) scale(1.1) rotate(8deg);
+  }
+  50% {
+    transform: translate(-16%, -10%) scale(0.92) rotate(-12deg);
+  }
+  100% {
+    transform: translate(-26%, 16%) scale(1.2) rotate(4deg);
+  }
+}
+
+@keyframes blob-roam-3 {
+  0% {
+    transform: translate(0, 0) scale(0.95) rotate(-6deg);
+  }
+  50% {
+    transform: translate(14%, -18%) scale(1.15) rotate(10deg);
+  }
+  100% {
+    transform: translate(-18%, -6%) scale(1) rotate(-14deg);
+  }
+}
+
+@keyframes blob-roam-4 {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate(-20%, 22%) scale(1.25) rotate(16deg);
+  }
+  100% {
+    transform: translate(16%, -14%) scale(0.85) rotate(-8deg);
+  }
+}
+
+.dial__content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.dial__time {
+  font-size: 50px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.dial--over .dial__time {
+  color: rgb(var(--mz-danger-rgb));
+}
+
+.dial__hint {
+  font-size: 11px;
+  color: var(--mz-text-muted);
+}
+
+.dial--over .dial__hint {
+  color: rgba(var(--mz-danger-rgb), 0.85);
+}
+
+.transport {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ----------------------------------------------------------------------------
+   The timer's two forms and the morph between them. The stage itself is
+   fixed; only the queue scrolls. Scrolling folds the full dial away —
+   max-height to zero, scaling and fading toward the top — while the header
+   bar unfolds from a 0fr grid row in its place. Both halves animate on the
+   same clock, so one reads as becoming the other.
+   ------------------------------------------------------------------------- */
+.stage__full {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  max-height: calc(var(--dial-size) + 180px);
+  transform-origin: top center;
+  transition:
+    max-height 0.35s var(--mz-ease),
+    opacity 0.25s var(--mz-ease),
+    transform 0.35s var(--mz-ease);
+}
+
+.stage--compact .stage__full {
+  max-height: 0;
+  opacity: 0;
+  transform: scale(0.55) translateY(-32px);
+  pointer-events: none;
+}
+
+/* The transitions on the bar and its row are direction-dependent (each rule
+   describes the way INTO its own state). Folding in, the bar rises into the
+   header line on the same 0.35s clock as the dial. Unfolding, it must not
+   replay that in reverse — a bar that squashes while the dial grows reads as
+   breaking, not morphing — so it simply dissolves in place, and only once
+   invisible does its row collapse and its pose snap back to the start. */
+.stage-bar-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  width: 100%;
+  transition: grid-template-rows 0.25s var(--mz-ease) 0.12s;
+}
+
+.stage--compact .stage-bar-wrap {
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.35s var(--mz-ease);
+}
+
+.stage-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 0;
+  /* The queue's exact measure, in both forms: the wrap is already inset by
+     the stage's inline padding, so 100% here equals the cards' width. */
+  width: 100%;
+  max-width: calc(880px - var(--space-5) * 2);
+  margin-inline: auto;
+  /* 7 + 28px controls + 10 + borders ≈ the topbar's 46px, so the two bars
+     read as one line; the extra 3px below houses the progress hairline. */
+  padding: 7px var(--space-3) 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--mz-radius-lg);
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.25);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--glass-shadow);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(6px) scale(0.94);
+  /* Unfolding: a quick dissolve; the transform jumps back to the start pose
+     only after the 0.18s fade has finished, so no movement is ever visible. */
+  transition:
+    opacity 0.18s var(--mz-ease),
+    transform 0s linear 0.2s;
+}
+
+.stage--compact .stage-bar {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.25s var(--mz-ease) 0.08s,
+    transform 0.35s var(--mz-ease);
+}
+
+/* The dial's aurora in miniature: same blobs, smaller stage, quieter. */
+.stage-bar__smoke {
+  position: absolute;
+  inset: -45%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s var(--mz-ease);
+}
+
+.stage-bar--running .stage-bar__smoke {
+  opacity: 0.55;
+}
+
+[data-mz-theme='light'] .stage-bar--running .stage-bar__smoke {
+  opacity: 0.4;
+}
+
+.stage-bar__time {
+  position: relative;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.stage-bar--over .stage-bar__time {
+  color: rgb(var(--mz-danger-rgb));
+}
+
+.stage-bar__hint {
+  position: relative;
+  font-size: 11px;
+  color: var(--mz-text-muted);
+}
+
+.stage-bar__actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* The topbar's crew, riding the bar's right end while it is folded. */
+.stage-bar__extras {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.stage-bar__progress {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 3px;
+  background: color-mix(in srgb, var(--mz-ink) 10%, transparent);
+}
+
+.stage-bar__progress > i {
+  display: block;
+  height: 100%;
+  background: rgb(var(--tone));
+  transition: width 0.9s linear;
+}
+
+/* ============================================================================
+   Queue
+   ========================================================================= */
+
+.queue-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+/* The only scroller on the canvas: the stage above stays fixed and reacts
+   to this list's scroll by morphing. The scroller itself bleeds to the
+   canvas edges so its scrollbar reads as the window's own; the cards inside
+   keep a readable measure and centre themselves instead. */
+.queue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1 1 auto;
+  min-height: 0;
+  /* 2px of headroom for the focus ring on the first card. */
+  padding: 2px var(--space-5) var(--space-5);
+}
+
+.queue > * {
+  width: 100%;
+  max-width: calc(880px - var(--space-5) * 2);
+  margin-inline: auto;
+}
+
+.queue__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  width: calc(100% - var(--space-5) * 2);
+  max-width: calc(880px - var(--space-5) * 2);
+  margin-inline: auto;
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
+  border-bottom: 1px solid var(--mz-border);
+}
+
+/* A long task title must not push the totals off the line. */
+.queue__now {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queue__total {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--mz-text-dim);
+}
+
+/* A floating glass card on the open canvas: the aurora and the ambient field
+   read through it blurred; the tone stripe keeps the task's identity. */
+.qitem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--mz-radius-lg);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur-card)) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--glass-shadow-card);
+  transition:
+    background var(--mz-duration) var(--mz-ease),
+    border-color var(--mz-duration) var(--mz-ease),
+    box-shadow var(--mz-duration) var(--mz-ease),
+    opacity var(--mz-duration) var(--mz-ease);
+}
+
+.qitem:hover {
+  background: var(--glass-bg-hover);
+}
+
+/* The current task: raised further out of the list — denser glass, deeper
+   drop shadow, the tone taking over the border. */
+.qitem--active {
+  background: var(--glass-bg-strong);
+  border-color: rgba(var(--tone), 0.45);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--glass-shadow);
+}
+
+/* With the avatar chip gone this stripe is the card's colour identity, so
+   every card carries it; the active one stretches its stripe taller and to
+   full strength, on top of the tone border and the deeper shadow. */
+.qitem::before {
+  content: '';
+  position: absolute;
+  inset-block: 12px;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: rgba(var(--tone), 0.75);
+  transition: background var(--mz-duration) var(--mz-ease);
+}
+
+.qitem--active::before {
+  inset-block: 10px;
+  background: rgb(var(--tone));
+}
+
+.qitem--done {
+  opacity: 0.55;
+}
+
+.qitem--done .qitem__title-text {
+  text-decoration: line-through;
+  text-decoration-color: var(--mz-text-muted);
+}
+
+.qitem--dragging {
+  opacity: 0.4;
+}
+
+.qitem--dropbefore {
+  box-shadow:
+    inset 0 2px 0 rgb(var(--mz-primary-rgb)),
+    var(--glass-shadow-card);
+}
+
+.qitem__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.qitem__title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.qitem__icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+}
+
+.qitem__title-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The running task's live dot: the tone itself, shedding a soft ring. Under
+   reduced motion the ring never leaves — a plain coloured dot remains. */
+.qitem__pulse {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(var(--tone));
+  animation: qitem-pulse 2s ease-out infinite;
+}
+
+@keyframes qitem-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--tone), 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(var(--tone), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--tone), 0);
+  }
+}
+
+/* One line, ellipsised; the full text lives in the hover title and the edit
+   dialog. Two rows of notes would double every card's height. */
+.qitem__desc {
+  margin-top: 1px;
+  font-size: 12px;
+  color: var(--mz-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qitem__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--mz-text-muted);
+}
+
+.qitem__time {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mz-text-dim);
+}
+
+.qitem__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  /* Kept mounted rather than hover-revealed: a control that only exists on
+     hover is invisible to touch and to anyone tabbing through the list. */
+  opacity: 0.55;
+  transition: opacity var(--mz-duration) var(--mz-ease);
+}
+
+.qitem:hover .qitem__actions,
+.qitem:focus-within .qitem__actions {
+  opacity: 1;
+}
+
+/* The dial in miniature: a sunken track, a convex fill. */
+.qitem__bar {
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mz-ink) 10%, transparent);
+  box-shadow: inset 0 1px 1.5px rgba(var(--shade-rgb), 0.35);
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.qitem__bar > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, rgb(var(--tone)) 78%, #fff) 0%,
+    rgb(var(--tone)) 55%,
+    color-mix(in srgb, rgb(var(--tone)) 80%, #000) 100%
+  );
+  transition: width 0.9s linear;
+}
+
+/* ============================================================================
+   Toasts — the bottom-right notification stack
+   ========================================================================= */
+
+.toasts {
+  position: fixed;
+  inset-inline-end: var(--space-4);
+  inset-block-end: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 340px;
+  max-width: calc(100vw - var(--space-5) * 2);
+  /* Above the sheet (z 51): a task finishing while the drawer is open must
+     still be seen. */
+  z-index: 60;
+  pointer-events: none;
+}
+
+/* The card itself is the kit's Alert; here only what makes it a toast — it
+   floats, it animates in, and it leaves room for the close button. */
+.toast {
+  pointer-events: auto;
+  padding-inline-end: 44px;
+  animation: toast-in 0.24s var(--mz-ease);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.toast__close {
+  position: absolute;
+  inset-block-start: 10px;
+  inset-inline-end: 10px;
+}
+
+.toast__close:focus-visible {
+  outline: var(--mz-ring-width) solid rgb(var(--mz-primary-rgb));
+  outline-offset: var(--mz-ring-offset);
+}
+
+/* ============================================================================
+   Statistics
+   ========================================================================= */
+
+/* A floating glass panel: detached from the window edge, blurring the
+   ambient field and whatever aurora drifts behind it. */
+.stats-col {
+  width: calc(var(--stats-w) - var(--space-3));
+  height: 100%;
+  margin-inline-start: var(--space-3);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--mz-radius-xl);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.25);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--glass-shadow);
+}
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-4);
+}
+
+/* Panel head: the heading left, «Экспорт» right, a rule underneath — the
+   same rhythm as the queue's head. In the drawer only the button renders,
+   and `margin-inline-start: auto` keeps it right-aligned. The negative
+   bottom margin trims `.stats`' 24px gap down to a visual 12. */
+.stats__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  margin-bottom: calc(var(--space-3) - var(--space-5));
+  border-bottom: 1px solid var(--mz-border);
+}
+
+.stats__head > :last-child {
+  margin-inline-start: auto;
+}
+
+/* Set apart from the block labels («Сегодня», «Вчера»): this is the panel's
+   own name, so it carries the topbar-title weight, not the muted caps. */
+.stats__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--mz-text);
+}
+
+.stat-block__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.stat-block__total {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px var(--space-2);
+  padding: var(--space-2) 0;
+}
+
+.stat-row__title {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat-row__value {
+  font-size: 12px;
+  color: var(--mz-text-dim);
+}
+
+.stat-row__bar {
+  grid-column: 1 / -1;
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mz-ink) 8%, transparent);
+  overflow: hidden;
+}
+
+.stat-row__bar > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: rgb(var(--tone));
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.kpi {
+  padding: var(--space-3);
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius);
+  background: var(--mz-face-fill);
+}
+
+.kpi__value {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.kpi__label {
+  font-size: 11px;
+  color: var(--mz-text-muted);
+  margin-top: 2px;
+}
+
+/* Seven bars, one per hour band — enough shape to compare two days at a glance
+   without pretending to be a chart. */
+.spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 34px;
+}
+
+.spark > i {
+  flex: 1;
+  min-height: 2px;
+  border-radius: 2px;
+  background: rgba(var(--tone), 0.85);
+}
+
+/* An hour with no work still needs a visible slot, or the row reads as four
+   blocks floating in space rather than a day with gaps in it. */
+.spark > i[data-empty='true'] {
+  background: color-mix(in srgb, var(--mz-ink) 16%, transparent);
+}
+
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.delta--up {
+  color: rgb(var(--mz-success-rgb));
+}
+.delta--down {
+  color: var(--mz-text-muted);
+}
+
+.empty {
+  padding: var(--space-5) var(--space-3);
+  text-align: center;
+  font-size: 12px;
+  color: var(--mz-text-muted);
+}
+
+/* ============================================================================
+   Forms
+   ========================================================================= */
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.accent-picker {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* The template dialog on a short window: the kit scrolls the whole dialog,
+   footer included. Here the dialog itself stops scrolling; the form becomes
+   a column where header and footer hold their ground and only the fields
+   between them scroll. */
+.tpl-dialog {
+  overflow: hidden;
+}
+
+.tpl-dialog form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tpl-dialog__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* The swatches' focus rings poke past the fields' box; keep them unclipped.
+     The vertical padding lives here too — an inline `padding` shorthand on
+     the element would silently cancel these longhands. */
+  padding: var(--space-5) 3px;
+  margin-inline: -3px;
+}
+
+/* Emoji shortlist for the template icon, same swatch rhythm as the colours. */
+.icon-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.icon-swatch {
+  width: 32px;
+  height: 32px;
+  /* The UA button padding would inset the glyph off-centre in a fixed box. */
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-family: inherit;
+  font-size: 17px;
+  /* The line box matches the box height, so the glyph centres on the button
+     itself rather than on a 1em strip floating inside it. */
+  line-height: 30px;
+  border: 1px solid transparent;
+  border-radius: var(--mz-radius-sm);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background var(--mz-duration) var(--mz-ease),
+    border-color var(--mz-duration) var(--mz-ease);
+}
+
+.icon-swatch:hover {
+  background: var(--mz-face-fill-hover);
+}
+
+.icon-swatch[aria-pressed='true'] {
+  border-color: var(--mz-border-strong);
+  background: var(--mz-face-fill);
+}
+
+.icon-swatch--none {
+  color: var(--mz-text-muted);
+  font-size: 14px;
+}
+
+.accent-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--mz-radius-sm);
+  border: 1px solid rgba(var(--tone), 0.4);
+  background: rgba(var(--tone), 0.22);
+  cursor: pointer;
+  transition: transform var(--mz-duration) var(--mz-ease);
+}
+
+.accent-swatch[aria-pressed='true'] {
+  border-color: rgb(var(--tone));
+  box-shadow: 0 0 0 2px rgba(var(--tone), 0.3);
+}
+
+.accent-swatch:hover {
+  transform: scale(1.06);
+}
+
+.accent-swatch:focus-visible {
+  outline: var(--mz-ring-width) solid rgb(var(--mz-primary-rgb));
+  outline-offset: var(--mz-ring-offset);
+}
+
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ---- Export dialog ------------------------------------------------------ */
+
+.export-dates {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  color: var(--mz-text-muted);
+}
+
+.export-tasks__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.export-tasks {
+  max-height: 168px;
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius);
+  padding: var(--space-1);
+}
+
+.export-task {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--mz-radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.export-task:hover {
+  background: var(--mz-face-fill);
+}
+
+.export-task__dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(var(--tone));
+}
+
+.export-task__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.export-task__time {
+  color: var(--mz-text-dim);
+  font-size: 12px;
+}
+
+.export-columns {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: var(--space-4);
+}
+
+.export-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  padding: var(--space-1) 0;
+  cursor: pointer;
+}
+
+.export-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-right: auto;
+  font-size: 12px;
+  color: var(--mz-text-dim);
+}
+
+.setting-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--mz-border);
+}
+
+.setting-row:last-child {
+  border-bottom: 0;
+}
+
+.setting-row__text {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.setting-row__hint {
+  font-size: 11px;
+  color: var(--mz-text-muted);
+  margin-top: 2px;
+  max-width: 34ch;
+}
+
+/* ============================================================================
+   Motion
+   ========================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Reduced motion keeps the glow, drops the drift: it still says "running",
+     it just stops moving. The static frame is asymmetric by construction, so
+     it still reads as an aurora, not a ring. */
+  .dial--running .dial__smoke {
+    opacity: 1;
+  }
+
+  .dial__blob {
+    animation: none !important;
+  }
+}
+
+/* ============================================================================
+   Fitting the kit's shells to a desktop window
+   The kit sizes itself for a scrolling page; an app window has a fixed height
+   and its panes scroll independently, so a few of its containers need to stop
+   growing and start clipping.
+   ========================================================================= */
+
+.mz-root {
+  height: 100%;
+}
+
+.mz-sidebar-layout {
+  height: 100dvh;
+  min-height: 0;
+  background: transparent;
+}
+
+.mz-sidebar-inset {
+  position: relative;
+  min-height: 0;
+  padding: var(--space-3);
+  background: transparent;
+}
+
+/* ----------------------------------------------------------------------------
+   Floating glass shell. The kit paints its chrome on opaque surfaces; here
+   every zone becomes a detached glass panel over the ambient field: the rail,
+   the topbar, the statistics column, dialogs, the drawer and the toasts all
+   share one recipe — `--glass-bg` fill, backdrop blur, hairline light border,
+   lit top edge, soft pooled shadow. Cards nested INSIDE a glass panel stay
+   flat translucent (ink mixes): stacking backdrop-filters would multiply the
+   compositing cost for no visible gain.
+   ------------------------------------------------------------------------- */
+.mz-sidebar {
+  margin: var(--space-3) 0 var(--space-3) var(--space-3);
+  height: calc(100dvh - var(--space-3) * 2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--mz-radius-xl);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.25);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--glass-shadow);
+}
+
+/* Dialogs (.mz-panel is DialogContent's surface) and the statistics drawer. */
+.mz-panel,
+.mz-sheet {
+  background: var(--glass-bg-strong);
+  border-color: var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.25);
+}
+
+.mz-panel {
+  box-shadow:
+    var(--mz-shadow-3),
+    inset 0 1px 0 var(--glass-highlight);
+}
+
+/* Solid fallback: same layout, opaque kit surfaces, no blur. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-bg: var(--mz-surface);
+    --glass-bg-hover: var(--mz-surface-2);
+    --glass-bg-strong: var(--mz-elevated);
+    --glass-border: var(--mz-border-strong);
+    --glass-blur: 0px;
+    --glass-blur-card: 0px;
+    --ambient: var(--mz-bg);
+  }
+}
+
+.qitem__grip {
+  display: inline-flex;
+  cursor: grab;
+}
+
+.qitem:active .qitem__grip {
+  cursor: grabbing;
+}
+
+/* Collapsed rail: a template shrinks to its colour chip, the add button to a
+   bare plus. `mz-sidebar-hide-collapsed` on the text does the rest. */
+.mz-sidebar[data-state='collapsed'][data-collapsible='icon'] .tpl {
+  justify-content: center;
+  padding-inline: var(--space-1);
+  padding-block: var(--space-2);
+  gap: 0;
+}
+
+/* The chip is barely 30px tall; the stripe's list-size insets would leave
+   almost nothing of it. */
+.mz-sidebar[data-state='collapsed'][data-collapsible='icon'] .tpl__strip {
+  inset-block: 7px;
+}
+
+.mz-sidebar[data-state='collapsed'][data-collapsible='icon'] .tpl__code {
+  display: block;
+}
+
+/* Collapsed, the chip (`.tpl__code`) already carries the emoji. */
+.mz-sidebar[data-state='collapsed'][data-collapsible='icon'] .tpl__icon {
+  display: none;
+}
+
+/* The kit button keeps its md paddings when only the icon is left, and the
+   icon rail is narrower than that — shed them so the plus fits centred. */
+.mz-sidebar[data-state='collapsed'][data-collapsible='icon'] .rail__new {
+  min-width: 0;
+  padding-inline: 0;
+}
+
+/* The group label is clipped to 8px in the rail; drop its bottom margin too. */
+.mz-sidebar[data-state='collapsed'][data-collapsible='icon'] .mz-sidebar__group-label {
+  margin-bottom: 0;
+}
+
+/* The kit clamps the collapsed rail to `overflow: hidden`; with more chips
+   than the window is tall the tail would be unreachable, so the vertical
+   scroll comes back. No scrollbar though: the icon column is 40px wide and
+   a classic 10px gutter would squeeze the chips — the wheel is the way. */
+.mz-sidebar[data-state='collapsed'][data-collapsible='icon'] .mz-sidebar__content {
+  overflow: hidden auto;
+  scrollbar-width: none;
+}
+
+.mz-sidebar[data-state='collapsed'][data-collapsible='icon'] .mz-sidebar__content::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Hour scale under the sparkline. */
+.spark {
+  height: 44px;
+}
+
+.spark-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--mz-text-muted);
+}
+
+.kpi__label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* Inside the Sheet: the sheet is a flex column, so its header stays pinned
+   while this body takes the remaining height and scrolls on its own. The
+   horizontal padding matches the sheet header's 20px; `.stats` itself goes
+   flush so the two paddings don't stack. */
+.stats-drawer {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 20px 20px;
+}
+
+.stats--flush {
+  padding: 0;
+}
