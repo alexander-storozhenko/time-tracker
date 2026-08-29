@@ -79,6 +79,12 @@ export interface Settings {
   sound: boolean
   /** Start the next queued task automatically once the current one finishes. */
   autoAdvance: boolean
+  /**
+   * Pause a running stretch when the machine suspends, crediting only the time
+   * before the sleep. Off, the clock runs straight through — for whoever
+   * deliberately tracks wall-clock time, naps included.
+   */
+  pauseOnSleep: boolean
   language: AppLanguage
 }
 
@@ -154,6 +160,7 @@ export const DEFAULT_SETTINGS: Settings = {
   notifications: true,
   sound: true,
   autoAdvance: false,
+  pauseOnSleep: true,
   language: 'system'
 }
 

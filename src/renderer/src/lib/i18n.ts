@@ -34,6 +34,10 @@ export interface Dict {
   recoveredTitle: string
   recoveredBody: (duration: string) => string
 
+  // Sleep-pause toast
+  sleepPausedTitle: string
+  sleepPausedBody: string
+
   // Timer stage
   timer: string
   noLimit: string
@@ -115,6 +119,8 @@ export interface Dict {
   soundHint: string
   notifLabel: string
   notifHint: string
+  pauseOnSleepLabel: string
+  pauseOnSleepHint: string
   languageLabel: string
   languageHint: string
   langSystem: string
@@ -204,6 +210,9 @@ const RU: Dict = {
   recoveredBody: (duration) =>
     `Прошлый запуск закрылся на ходу. Записал ${duration} до последней отметки и поставил таймер на паузу.`,
 
+  sleepPausedTitle: 'Таймер на паузе',
+  sleepPausedBody: 'Компьютер уходил в сон — время до засыпания сохранено, сон в работу не записан.',
+
   timer: 'Таймер',
   noLimit: 'без лимита',
   overLimit: (limit) => `сверх ${limit}`,
@@ -291,6 +300,9 @@ const RU: Dict = {
   soundHint: 'Тихий двухнотный сигнал, когда задача переходит свой лимит.',
   notifLabel: 'Уведомления',
   notifHint: 'Системное уведомление и подсветка окна, когда время вышло.',
+  pauseOnSleepLabel: 'Пауза при сне компьютера',
+  pauseOnSleepHint:
+    'Когда компьютер засыпает, таймер встаёт на паузу — сон не идёт в зачёт. Выключено — часы идут сквозь сон.',
   languageLabel: 'Язык',
   languageHint: 'Интерфейс, отчёты и меню.',
   langSystem: 'Системный',
@@ -367,6 +379,9 @@ const EN: Dict = {
   recoveredTitle: 'Timer recovered',
   recoveredBody: (duration) =>
     `The previous run closed mid-flight. Logged ${duration} up to the last heartbeat and paused the timer.`,
+
+  sleepPausedTitle: 'Timer paused',
+  sleepPausedBody: 'The computer went to sleep — time up to that point was saved; the sleep itself was not logged.',
 
   timer: 'Timer',
   noLimit: 'no limit',
@@ -455,6 +470,9 @@ const EN: Dict = {
   soundHint: 'A quiet two-note chime when a task crosses its limit.',
   notifLabel: 'Notifications',
   notifHint: 'A system notification and window highlight when time is up.',
+  pauseOnSleepLabel: 'Pause when the computer sleeps',
+  pauseOnSleepHint:
+    'When the machine suspends, the timer pauses — sleep does not count. Off, the clock runs straight through.',
   languageLabel: 'Language',
   languageHint: 'Interface, reports and the menu.',
   langSystem: 'System',

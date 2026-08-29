@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, Notification, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Menu, Notification, powerMonitor, shell } from 'electron'
 import { join } from 'node:path'
 import type {
   ExportOptions,
@@ -105,7 +105,25 @@ function buildMenu(lang: 'ru' | 'en'): void {
   )
 }
 
+// A second copy would open the same database, and every queue save is a full
+// rewrite — two instances would silently clobber each other's queue. The lock
+// makes a second launch hand over to the running window instead.
+const hasLock = app.requestSingleInstanceLock()
+if (!hasLock) {
+  app.quit()
+}
+
+app.on('second-instance', () => {
+  if (!mainWindow) return
+  if (mainWindow.isMinimized()) mainWindow.restore()
+  mainWindow.show()
+  mainWindow.focus()
+})
+
 app.whenReady().then(() => {
+  // `ready` can still fire on the losing instance while quit() is in flight;
+  // it must not touch the database or open a window on its way out.
+  if (!hasLock) return
   try {
     db.open()
   } catch (err) {
@@ -155,6 +173,13 @@ app.whenReady().then(() => {
     if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isFocused()) return
     mainWindow.flashFrame(true)
     if (process.platform === 'darwin') app.dock?.bounce('informational')
+  })
+
+  // Sleep is rest, not work: the renderer pauses the running stretch before
+  // the machine suspends, so the night never lands in the log. (The reducer's
+  // tick-gap clamp is the backstop where this event is not delivered.)
+  powerMonitor.on('suspend', () => {
+    mainWindow?.webContents.send('power:suspend')
   })
 
   createWindow()

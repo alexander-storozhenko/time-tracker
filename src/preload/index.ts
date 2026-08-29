@@ -37,7 +37,15 @@ const api = {
     ipcRenderer.invoke('sessions:deleteTask', { from, to, key }),
   revealPath: (path: string): void => ipcRenderer.send('reveal:path', path),
   notify: (title: string, body: string): void => ipcRenderer.send('notify', { title, body }),
-  requestAttention: (): void => ipcRenderer.send('window:attention')
+  requestAttention: (): void => ipcRenderer.send('window:attention'),
+  /** Fires just before the machine suspends; returns an unsubscribe. */
+  onPowerSuspend: (listener: () => void): (() => void) => {
+    const handler = (): void => listener()
+    ipcRenderer.on('power:suspend', handler)
+    return () => {
+      ipcRenderer.removeListener('power:suspend', handler)
+    }
+  }
 }
 
 contextBridge.exposeInMainWorld('tracker', api)

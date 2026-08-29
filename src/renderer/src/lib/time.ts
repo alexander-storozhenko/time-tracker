@@ -32,8 +32,11 @@ export function formatClock(totalSeconds: number): string {
 export function formatDuration(totalSeconds: number): string {
   const d = t()
   const s = Math.max(0, Math.floor(totalSeconds))
-  const hours = Math.floor(s / 3600)
-  const minutes = Math.round((s % 3600) / 60)
+  // Round to whole minutes FIRST, then split: rounding the remainder alone
+  // yields 60 and prints «1 ч 60 мин» for anything within 30 s under the hour.
+  const minutesTotal = Math.round(s / 60)
+  const hours = Math.floor(minutesTotal / 60)
+  const minutes = minutesTotal % 60
   if (hours === 0 && minutes === 0) return s > 0 ? d.lessThanMin : d.zeroMin
   if (hours === 0) return `${minutes} ${d.unitMin}`
   return minutes === 0

@@ -18,10 +18,18 @@ import {
   type Settings,
   type Template
 } from '@shared/types'
-import { resolveLang, setCurrentLang } from './i18n'
+import { resolveLang, setCurrentLang, t } from './i18n'
 import { toISODate, todayISO } from './time'
+import { toast } from './toast'
 
 const uid = (): string => crypto.randomUUID()
+
+/**
+ * A heartbeat lands every 5 seconds while running; a gap this wide means the
+ * machine slept (or the process froze) mid-run. The stretch is then credited
+ * only up to the last heartbeat and paused — same rule as cold-start recovery.
+ */
+const SLEEP_GAP_MS = 30_000
 
 export interface NewTemplate {
   title: string
@@ -297,8 +305,26 @@ export function reducer(state: State, action: Action): State {
       }
     }
 
-    case 'timer/tick':
-      return state.runningSince === null ? state : { ...state, lastTickAt: action.at }
+    case 'timer/tick': {
+      if (state.runningSince === null) return state
+      // The suspend event is not delivered on every platform; the gap in the
+      // heartbeat is the backstop. Bank up to the last mark, never to now —
+      // a machine that slept overnight must not log the night as work.
+      // Unless that is exactly what the user asked for: with `pauseOnSleep`
+      // off the clock runs straight through, and a gap is just a late tick.
+      const previous = state.lastTickAt ?? state.runningSince
+      if (state.settings.pauseOnSleep && action.at - previous > SLEEP_GAP_MS) {
+        const banked = bank(state, previous, false)
+        return {
+          ...state,
+          queue: banked.queue,
+          pendingSessions: withSession(state, banked.session),
+          runningSince: null,
+          lastTickAt: null
+        }
+      }
+      return { ...state, lastTickAt: action.at }
+    }
 
     // Sessions were changed outside the reducer (the export dialog's delete);
     // every consumer of the day stats re-queries.
@@ -486,11 +512,49 @@ export function StoreProvider({ children }: { children: ReactNode }): React.JSX.
   }, [running])
 
   // Heartbeat for crash recovery — also what triggers the periodic queue save.
+  // The tick doubles as the sleep detector: a gap makes the reducer clamp and
+  // pause the stretch, and the same check here says why the timer stopped.
+  // Both gates mirror the reducer's own, so the toast never fires without the
+  // pause (or the other way round).
+  const lastTickRef = useRef<number | null>(null)
+  lastTickRef.current = state.lastTickAt
+  const pauseOnSleepRef = useRef(true)
+  pauseOnSleepRef.current = state.settings.pauseOnSleep
   useEffect(() => {
     if (!running) return
-    const id = setInterval(() => dispatch({ type: 'timer/tick', at: Date.now() }), 5_000)
+    const id = setInterval(() => {
+      const at = Date.now()
+      const previous = lastTickRef.current
+      dispatch({ type: 'timer/tick', at })
+      if (pauseOnSleepRef.current && previous !== null && at - previous > SLEEP_GAP_MS) {
+        toast({
+          title: t().sleepPausedTitle,
+          body: t().sleepPausedBody,
+          tone: 'info',
+          duration: null
+        })
+      }
+    }, 5_000)
     return () => clearInterval(id)
   }, [running])
+
+  // The clean path: main says the machine is about to suspend, the stretch is
+  // banked right here at its true end. Sleep is rest, not work — unless the
+  // user switched `pauseOnSleep` off and wants wall-clock time.
+  const runningRef = useRef(false)
+  runningRef.current = running
+  useEffect(() => {
+    return window.tracker.onPowerSuspend(() => {
+      if (!runningRef.current || !pauseOnSleepRef.current) return
+      dispatch({ type: 'timer/pause', at: Date.now() })
+      toast({
+        title: t().sleepPausedTitle,
+        body: t().sleepPausedBody,
+        tone: 'info',
+        duration: null
+      })
+    })
+  }, [])
 
   // A window left open past midnight must not keep writing into yesterday.
   useEffect(() => {

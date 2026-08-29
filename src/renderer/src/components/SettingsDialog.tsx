@@ -67,6 +67,12 @@ export function SettingsDialog({ open, onOpenChange }: Props): React.JSX.Element
             onChange={(autoAdvance) => set({ autoAdvance })}
           />
           <Row
+            label={t().pauseOnSleepLabel}
+            hint={t().pauseOnSleepHint}
+            checked={state.settings.pauseOnSleep}
+            onChange={(pauseOnSleep) => set({ pauseOnSleep })}
+          />
+          <Row
             label={t().soundLabel}
             hint={t().soundHint}
             checked={state.settings.sound}

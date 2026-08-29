@@ -364,6 +364,7 @@ export function loadState(): PersistedState {
     notifications: stored.notifications ?? DEFAULT_SETTINGS.notifications,
     sound: stored.sound ?? DEFAULT_SETTINGS.sound,
     autoAdvance: stored.autoAdvance ?? DEFAULT_SETTINGS.autoAdvance,
+    pauseOnSleep: stored.pauseOnSleep ?? DEFAULT_SETTINGS.pauseOnSleep,
     language: stored.language ?? DEFAULT_SETTINGS.language
   }
 
