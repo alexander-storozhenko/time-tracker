@@ -1,6 +1,5 @@
-# Time Tracker
+![Time Tracker](resources/banner.png)
 
-A desktop time tracker for people who plan the day as a queue of tasks.
 Templates on the left, a dial with today's queue in the middle, today's and
 yesterday's numbers on the right. Built with Electron and
 [`@morze/ui`](https://www.npmjs.com/package/@morze/ui).
