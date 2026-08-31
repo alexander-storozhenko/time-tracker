@@ -14,9 +14,14 @@
   --mz-primary-fg: #1c1206;
 
   --accent-amber: 235, 150, 66;
-  --accent-violet: 168, 124, 248;
+  --accent-lime: 214, 241, 75;
+  --accent-green: 75, 241, 97;
   --accent-emerald: 52, 211, 153;
+  --accent-cyan: 75, 236, 241;
   --accent-sky: 56, 189, 248;
+  --accent-blue: 75, 141, 241;
+  --accent-violet: 168, 124, 248;
+  --accent-fuchsia: 241, 75, 191;
   --accent-rose: 255, 100, 130;
   --accent-slate: 148, 163, 184;
 
@@ -27,10 +32,16 @@
 
   /* Floating glass. Panels (rail, topbar, statistics, dialogs) blur the
      ambient field behind them; cards use the same fill with a lighter blur.
-     `strong` is for chrome that must read instantly: dialogs and toasts. */
-  --glass-bg: rgba(20, 20, 32, 0.52);
-  --glass-bg-hover: rgba(30, 30, 46, 0.6);
-  --glass-bg-strong: rgba(26, 26, 40, 0.74);
+     `strong` is for chrome that must read instantly: dialogs and toasts.
+
+     Warm-neutral rather than blue. The kit mixes the ember brand into its own
+     neutrals, so a well — an input, a tab strip — lands with red just above
+     green and blue only a few points above red. Glass mixed from a flat
+     blue-grey wrapped those warm controls in a cold panel, which is where the
+     two stopped matching. */
+  --glass-bg: rgba(23, 21, 28, 0.52);
+  --glass-bg-hover: rgba(34, 31, 41, 0.6);
+  --glass-bg-strong: rgba(30, 27, 35, 0.74);
   --glass-border: rgba(var(--glare-rgb), 0.1);
   --glass-highlight: rgba(var(--glare-rgb), 0.09);
   --glass-shadow: 0 16px 40px -18px rgba(var(--shade-rgb), 0.8);
@@ -56,6 +67,17 @@
   --dial-well-glare: rgba(var(--glare-rgb), 0.07);
 }
 
+/* Dark only, deliberately: the light theme keeps the kit's scrim, and this must
+   not reach it through the `:root` half of the selector above.
+
+   A dialog's scrim is not just a dimmer — it shows through a quarter of the
+   panel's glass and covers every block behind it, so while a modal is open it
+   colours the whole screen. The kit's is blue-black, which is what put the cold
+   cast back over the warm glass. */
+[data-mz-theme='dark'] {
+  --mz-overlay: rgba(9, 7, 12, 0.74);
+}
+
 [data-mz-theme='light'] {
   /* Lightened against the dark value: the kit darkens a filled surface to 80%
      on press, and below this the near-black label drops under 4.5:1. */
@@ -63,9 +85,14 @@
   --mz-primary-fg: #1c1206;
 
   --accent-amber: 194, 106, 20;
-  --accent-violet: 124, 74, 232;
+  --accent-lime: 169, 199, 15;
+  --accent-green: 15, 199, 40;
   --accent-emerald: 16, 175, 122;
+  --accent-cyan: 15, 193, 199;
   --accent-sky: 14, 145, 214;
+  --accent-blue: 15, 89, 199;
+  --accent-violet: 124, 74, 232;
+  --accent-fuchsia: 199, 15, 144;
   --accent-rose: 226, 60, 92;
   --accent-slate: 100, 116, 139;
 
@@ -454,12 +481,14 @@ textarea {
 /* The card's colour identity: the same stripe as the queue cards carry,
    mirrored to the right edge so the two lists read as one family facing
    each other across the canvas. */
+/* On the leading edge, where the queue keeps its own stripe: a template and
+   the card it becomes should carry their colour in the same place. */
 .tpl__strip {
   position: absolute;
   inset-block: 12px;
-  inset-inline-end: 0;
+  inset-inline-start: 0;
   width: 3px;
-  border-radius: 3px 0 0 3px;
+  border-radius: 0 3px 3px 0;
   background: rgba(var(--tone), 0.75);
 }
 
@@ -1503,6 +1532,7 @@ textarea {
 
 .accent-picker {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
 }
 
@@ -1574,12 +1604,15 @@ textarea {
   font-size: 14px;
 }
 
+/* The swatch shows the colour itself, not a hint of it. At a fifth of its
+   strength every hue collapsed toward the panel, and eleven of them are only
+   worth offering if they can be told apart in the picker. */
 .accent-swatch {
   width: 28px;
   height: 28px;
   border-radius: var(--mz-radius-sm);
-  border: 1px solid rgba(var(--tone), 0.4);
-  background: rgba(var(--tone), 0.22);
+  border: 1px solid rgba(var(--tone), 0.75);
+  background: rgba(var(--tone), 0.58);
   cursor: pointer;
   transition: transform var(--mz-duration) var(--mz-ease);
 }
@@ -1685,6 +1718,305 @@ textarea {
   margin-right: auto;
   font-size: 12px;
   color: var(--mz-text-dim);
+}
+
+/* ---- Report written by hand --------------------------------------------- */
+
+/* With a list and a composer inside one tab the dialog outgrows the window.
+   The kit scrolls the whole dialog, footer included; here the dialog itself
+   stops scrolling and only the fields between header and footer move — the
+   same treatment as the template dialog. */
+.export-dialog {
+  overflow: hidden;
+}
+
+.export-dialog__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* The swatches' focus rings poke past the fields' box; keep them unclipped. */
+  padding: var(--space-4) 3px;
+  margin-inline: -3px;
+}
+
+.manual-total {
+  font-size: 12px;
+  color: var(--mz-text-dim);
+}
+
+.manual-list {
+  max-height: 214px;
+  border: 1px solid var(--mz-border);
+  border-radius: var(--mz-radius);
+  padding: var(--space-2);
+}
+
+.manual-day + .manual-day {
+  margin-top: var(--space-3);
+}
+
+/* The draft reads the way the report will print it: by day, each day summed. */
+.manual-day__head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-1);
+  padding: 0 var(--space-2);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mz-text-muted);
+}
+
+.manual-day__rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--mz-radius-sm);
+  font-size: 13px;
+}
+
+.mrow:hover {
+  background: var(--mz-face-fill);
+}
+
+/* The line the composer is holding, so an edit in progress stays findable
+   after the list has been scrolled away from it. */
+.mrow[data-editing] {
+  background: rgba(var(--tone), 0.14);
+  box-shadow: inset 2px 0 0 rgb(var(--tone));
+}
+
+.mrow__mark {
+  flex: 0 0 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+}
+
+/* An icon takes the dot's place and would take the colour with it; the colour
+   comes back as the chip behind it — the same move the printed report makes. */
+.mrow__mark--chip {
+  border-radius: 7px;
+  background: rgba(var(--tone), 0.2);
+  box-shadow: inset 0 0 0 1px rgba(var(--tone), 0.4);
+}
+
+.mrow__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(var(--tone));
+}
+
+/* Title and its note share the row's flexible column. */
+.mrow__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.mrow__title,
+.mrow__desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mrow__desc {
+  font-size: 11.5px;
+  color: var(--mz-text-muted);
+}
+
+.mrow__when {
+  min-width: 86px;
+  text-align: right;
+  color: var(--mz-text-muted);
+  font-size: 12px;
+}
+
+.mrow__next {
+  margin-left: 1px;
+  font-size: 9px;
+}
+
+.mrow__time {
+  min-width: 46px;
+  text-align: right;
+  color: var(--mz-text-dim);
+  font-size: 12px;
+}
+
+.manual-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* What the line is, and the button that files it — one movement. */
+.manual-form__top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.manual-form__submit {
+  flex: 0 0 auto;
+}
+
+/* When it happened and how it looks. The widths are explicit because the kit's
+   inputs are `width: 100%; min-width: 0`: left to shrink, the native date and
+   time pickers clip their own controls. */
+.manual-form__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.manual-form__space-between {
+  display: flex;
+  justify-content: space-between;
+}
+
+.manual-form__unit {
+  margin-left: calc(var(--space-2) * -1 + 2px);
+  font-size: 12px;
+  color: var(--mz-text-muted);
+}
+
+/* The kit's textarea stands 96px tall, which is a wall in a composer that is
+   already three rows deep. Two lines to start; the grip takes it further. */
+.manual-form__note {
+  min-height: 64px;
+}
+
+/* Names the clock beside it: a bare time box read as an unexplained field. */
+.manual-form__prefix {
+  margin-right: calc(var(--space-2) * -1 + 2px);
+  font-size: 12px;
+  color: var(--mz-text-muted);
+}
+
+/* Where the line lands, read rather than recalculated. Holds its width so the
+   durations stay in a column whether or not a line carries a clock. */
+.manual-form__end {
+  min-width: 56px;
+  font-size: 12px;
+  color: var(--mz-text-muted);
+}
+
+.manual-form__swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(var(--tone), 0.5);
+  background: rgba(var(--tone), 0.35);
+}
+
+/* «не сохранён» sits where the day total sits on the list below it. */
+.manual-state {
+  font-size: 12px;
+  color: var(--mz-text-muted);
+}
+
+/* Five across, five down: the shortlist is 24 icons and «none», so the grid
+   comes out square instead of leaving a ragged last row. Five 32px swatches
+   and their four 4px gaps need 176px, and the popover spends 32px on padding
+   plus 1px of border a side — 208px left it two short, which dropped the row
+   to four and opened a dead strip down the right. */
+.manual-pop {
+  width: 212px;
+}
+
+/* Six to a row, then five: 6 x 28px plus five 8px gaps inside 16px padding,
+   with a couple of pixels to spare so the sixth never wraps alone. */
+.manual-pop--narrow {
+  width: 252px;
+}
+
+.manual-pop--list {
+  width: 288px;
+  padding: var(--space-2);
+}
+
+.mreport-list {
+  max-height: 216px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mreport-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.mreport {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--mz-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--mz-duration) var(--mz-ease);
+}
+
+.mreport:hover {
+  background: var(--mz-face-fill);
+}
+
+.mreport:focus-visible {
+  outline: var(--mz-ring-width) solid rgb(var(--mz-primary-rgb));
+  outline-offset: var(--mz-ring-offset);
+}
+
+/* The document already open, so the list says where you are. */
+.mreport[aria-current] {
+  border-color: var(--mz-border-strong);
+  background: var(--mz-face-fill);
+}
+
+.mreport--new {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+  color: var(--mz-text-dim);
+  font-size: 13px;
+}
+
+.mreport__name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mreport__meta {
+  color: var(--mz-text-muted);
+  font-size: 11.5px;
 }
 
 .setting-row {

@@ -1,124 +1,66 @@
 # Time Tracker
 
-Десктопное приложение на Electron: слева библиотека шаблонов задач, по центру
-круговой таймер с очередью на день, справа статистика за сегодня и вчера.
-Интерфейс собран на [`@morze/ui`](https://www.npmjs.com/package/@morze/ui).
+A desktop time tracker for people who plan the day as a queue of tasks.
+Templates on the left, a dial with today's queue in the middle, today's and
+yesterday's numbers on the right. Built with Electron and
+[`@morze/ui`](https://www.npmjs.com/package/@morze/ui).
 
-## Запуск
+## How it works
+
+**Templates** are the tasks you do again and again — a name, a colour, an
+optional icon and an optional time limit. Click or drag one into the **queue**
+to plan your day; the same template can go in as many times as you like.
+
+The dial runs one task at a time. With a limit it counts down, without one it
+is a stopwatch. Smoke drifting off the dial means the clock is running.
+
+What happens at the limit belongs to the task, not to a settings screen —
+different work wants a different answer. **Keep going past the limit**:
+
+| | |
+| --- | --- |
+| off | the task finishes exactly at the limit and banks the time |
+| on | the limit becomes a mark; the clock keeps counting the overtime |
+
+Either way the limit brings one quiet chime and one notification.
+
+Time is banked in **runs** — an unbroken stretch from play to pause or stop.
+The statistics are built from runs, so nothing is lost when a task is never
+formally finished, and the queue can be cleared without losing history.
+
+## Reports
+
+**Export**, above the statistics, builds a PDF or JSON for any period: tasks,
+days, hours, and optionally every run.
+
+The **By hand** tab builds the same report out of lines you type yourself —
+for work the tracker never saw. A line is a task, a date and a number of
+hours; a colour comes with it, and an icon, a note and a start time are yours
+to add if they matter. Reports save under a name and reopen for editing later.
+
+Hand-written lines never become tracked runs. The statistics stay a record of
+measured time, not remembered time.
+
+## Shortcuts
+
+| | |
+| --- | --- |
+| `Space` | start / pause |
+| `Ctrl` + `B` | collapse the templates column |
+| `Ctrl` + `Shift` + `B` | collapse the statistics column |
+
+## Running it
 
 ```bash
 npm install
-npm run dev        # разработка с hot reload
-npm run build      # typecheck + сборка в out/
-npm start          # запустить собранное
-npm run dist:linux # собрать дистрибутив
+npm run dev        # development, with hot reload
+npm run build      # typecheck and build into out/
+npm start          # run the built app
+npm run dist:linux # package a distributable
 ```
 
-## Как это работает
+## Data
 
-**Шаблон** — многоразовое описание задачи: название, цвет (полоска сверху
-карточки), необязательный лимит по времени и поведение на этом лимите. **Очередь** — план на сегодня: шаблон добавляется в неё
-кликом или перетаскиванием, и один и тот же шаблон можно поставить в очередь
-сколько угодно раз.
-
-Таймер всегда работает с одной задачей — текущей. С лимитом он считает вниз и
-рисует дугу; без лимита работает как секундомер. Дуга и дорожка под ней собраны
-по рельефному рецепту кита: дорожка — вогнутый жёлоб (тёмный верх, светлая
-нижняя губа, тень под верхней стенкой), дуга — выпуклая бусина (светлый
-гребень, тёмный низ, белый блик по верху и свечение тона под ней). Кольцо
-повёрнуто на -90°, поэтому «вертикаль» для градиентов и смещений считается в
-повёрнутых координатах SVG. Пока он идёт, от циферблата
-развеивается дым. У источника — плотное свечение, обнимающее кольцо и медленно
-дышащее; из него шесть размытых клубов уходят наружу, каждый по своему циклу
-(7–17 с, попарно взаимно простые, с разными фазами): родился у кольца, набрал
-плотность, уплыл, расширяясь, и растворился. Масок и обрезки нет — клуб
-заканчивается затуханием, поэтому у дыма нет видимой границы. Точки рождения
-медленно прецессируют (несущий слой делает оборот за 97 с). Анимация — только
-transform и opacity, размытие растеризуется один раз. Дым и есть индикатор работы:
-подписи «идёт / пауза» внутри циферблата убраны, состояние остаётся только в
-`role="status"` для скринридеров. За лимитом весь циферблат вместе с дымом
-становится красным. `Завершить` записывает время в
-задачу и в статистику.
-
-### Что происходит на лимите
-
-Это свойство шаблона, а не глобальная настройка: ответ разный для разной
-работы. Переключатель **«Продолжать после лимита»** в диалоге шаблона:
-
-| | |
-| --- | --- |
-| выключен | задача сама завершается ровно на лимите и записывает время |
-| включён | лимит становится отметкой: таймер продолжает идти и считает время **сверх** плана (`+MM:SS`) |
-
-В обоих случаях на лимите один раз звучит сигнал и приходит уведомление.
-«Сразу брать следующую» работает только в первом случае — задача, которая
-считает сверх лимита, никогда не завершается сама.
-
-**Подход (session)** — один непрерывный отрезок работы от `play` до `pause` или
-`stop`. Статистика строится именно из подходов, поэтому время не теряется, даже
-если задачу так и не завершили, а очередь можно чистить без потери истории.
-
-### Горячие клавиши
-
-| | |
-| --- | --- |
-| `Пробел` | старт / пауза |
-| `Ctrl` + `B` | свернуть колонку шаблонов |
-| `Ctrl` + `Shift` + `B` | свернуть колонку статистики |
-
-Когда задача переходит свой лимит, звучит тихий двухнотный сигнал (G5 → C6,
-синтезируется через Web Audio, файла нет). Он отдельно от системных
-уведомлений — обе галочки в настройках независимы.
-
-## Данные
-
-SQLite через встроенный в Node модуль `node:sqlite` — без нативной сборки и без
-зависимостей. База лежит в пользовательской директории приложения
-(`~/.config/time-tracker/time-tracker.db` на Linux); открыть папку — меню
-`Файл → Показать файл данных`. Режим журнала — WAL.
-
-Таблицы: `templates`, `queue_items`, `sessions` (с индексом по дню), `meta`
-для настроек и состояния таймера. Версия схемы лежит в `meta.schemaVersion`,
-миграции идут при открытии базы (`v2` добавила `overrun`). Статистика считается запросами по дню, а не
-загрузкой всего лога в память, поэтому размер истории на запуск не влияет.
-
-Запись разбита по таблицам: сердцебиение раз в 5 секунд трогает только очередь
-и не переписывает лог подходов.
-
-Если рядом окажется `time-tracker.json` от прежней версии, он импортируется при
-первом запуске и переименовывается в `*.json.imported`.
-
-Пока таймер идёт, каждые 5 секунд пишется отметка `lastTickAt`. Если приложение
-закрылось на ходу, при следующем запуске время досчитывается **до этой
-отметки**, а не до текущего момента: ноутбук, проспавший ночь, не должен
-записать восемь часов работы. Таймер возвращается на паузе, о восстановлении
-сообщает баннер.
-
-## Структура
-
-```
-resources/
-├─ logo.png            исходник знака (1254px)
-└─ icon.png            512px, иконка приложения и окна
-
-src/
-├─ shared/types.ts     модель данных, общая для процессов
-├─ main/
-│  ├─ index.ts         окно, меню, уведомления, IPC
-│  └─ db.ts            схема SQLite, запросы статистики, импорт старого JSON
-├─ preload/            contextBridge: load / save-по-таблицам / stats / notify
-└─ renderer/src/
-   ├─ assets/logo.png  96px, знак в шапке
-   ├─ lib/             store (reducer + персистентность), useStats, chime, формат времени
-   └─ components/      рельса шаблонов, таймер, очередь, статистика, диалоги
-```
-
-Оба размера получены из `resources/logo.png` через `nativeImage` самого
-Electron — отдельной зависимости для картинок в проекте нет.
-
-Рендерер изолирован (`contextIsolation`, `sandbox`, без `nodeIntegration`) и
-ходит в базу только через preload: SQL живёт целиком в main-процессе.
-
-> `node:sqlite` в Node 22 помечен экспериментальным. Он работает в Electron 38
-> без флагов, но API может измениться — при обновлении Electron стоит
-> прогнать `npm run build` и проверить запуск.
+Everything lives in one SQLite file in the app's user directory
+(`~/.config/time-tracker/time-tracker.db` on Linux); open the folder from
+**File → Show data file**. Nothing leaves your machine.

@@ -10,6 +10,8 @@ import type { Accent, ISODate, Session } from '../shared/types'
 export interface ReportTask {
   title: string
   accent: Accent
+  /** Emoji, when the line carries one; only hand-written reports do. */
+  icon: string | null
   seconds: number
   runs: number
   /** Runs that went all the way to their planned limit. */
@@ -22,7 +24,18 @@ export interface ReportDay {
   date: ISODate
   totalSec: number
   runs: number
-  tasks: Array<{ title: string; accent: Accent; seconds: number }>
+  tasks: Array<{ title: string; accent: Accent; icon: string | null; seconds: number }>
+}
+
+/** A run as the report lists it. Tracked sessions carry no icon; hand-written
+ *  lines do, which is the only difference between the two sources on paper. */
+export interface ReportSession extends Session {
+  icon?: string | null
+  /** Hand-written lines may carry a note; tracked runs never do. */
+  description?: string
+  /** The line records a length but no time of day: `startedAt` is a placeholder
+   *  for ordering only, and must not be printed or charted. */
+  untimed?: boolean
 }
 
 export interface ReportData {
@@ -40,15 +53,27 @@ export interface ReportData {
   days: ReportDay[] | null
   /** Seconds per two-hour band from 08:00 to 22:00; `null` when off. */
   bands: number[] | null
-  sessions: Session[] | null
+  sessions: ReportSession[] | null
+  /**
+   * Emoji -> data-URI PNG. The offscreen printer has no font guarantee and no
+   * access to the app's bundled artwork, so every icon arrives as a picture.
+   * Each one is spent through a generated class, written into the stylesheet
+   * once — inlining a 7 KB URI per row would multiply the page by its length.
+   */
+  icons: Record<string, string>
 }
 
 /** The app's light-theme accents: the report prints on white. */
 const ACCENT_HEX: Record<Accent, string> = {
   amber: '#c26a14',
-  violet: '#7c4ae8',
+  lime: '#a9c70f',
+  green: '#0fc728',
   emerald: '#10af7a',
+  cyan: '#0fc1c7',
   sky: '#0e91d6',
+  blue: '#0f59c7',
+  violet: '#7c4ae8',
+  fuchsia: '#c70f90',
   rose: '#e23c5c',
   slate: '#64748b'
 }
@@ -203,6 +228,36 @@ const hexOf = (accent: Accent): string => ACCENT_HEX[accent] ?? ACCENT_HEX.slate
 const dot = (accent: Accent): string =>
   `<i class="dot" style="background:${hexOf(accent)}"></i>`
 
+/**
+ * What stands in front of a title: the icon when the line has one, tinted with
+ * its colour so the accent survives, and the plain colour dot when it does not.
+ */
+function marker(icons: IconClasses, accent: Accent, icon?: string | null): string {
+  if (!icon) return dot(accent)
+  const className = icons.get(icon)
+  // An icon with no artwork (an emoji the app does not bundle) still prints,
+  // as the character itself.
+  if (!className) return `<span class="mark mark--glyph">${esc(icon)}</span>`
+  return `<i class="mark ${className}" style="background-color:${hexOf(accent)}26"></i>`
+}
+
+/** Emoji -> the class its picture was written to. */
+type IconClasses = Map<string, string>
+
+/** Only `data:` images are ever let through, and the URI is escaped on the way
+ *  in: everything here is hand-typed text that ends up inside an attribute. */
+function iconStyles(icons: Record<string, string>): { css: string; classes: IconClasses } {
+  const classes: IconClasses = new Map()
+  const rules: string[] = []
+  for (const [icon, uri] of Object.entries(icons)) {
+    if (!uri.startsWith('data:image/')) continue
+    const className = `mk${classes.size}`
+    classes.set(icon, className)
+    rules.push(`.${className} { background-image: url("${esc(uri)}"); }`)
+  }
+  return { css: rules.join('\n  '), classes }
+}
+
 // ---------------------------------------------------------------------------
 // Sections
 // ---------------------------------------------------------------------------
@@ -221,7 +276,7 @@ function kpis(data: ReportData): string {
     .join('')}</div>`
 }
 
-function taskTable(data: ReportData): string {
+function taskTable(data: ReportData, icons: IconClasses): string {
   const d = dictOf(data)
   const rows = data.tasks
     .map((task) => {
@@ -231,7 +286,7 @@ function taskTable(data: ReportData): string {
         (task.reachedLimit > 0 ? ` · ${d.toLimit(task.reachedLimit)}` : '')
       return `<div class="trow">
         <div class="trow__head">
-          <span class="trow__title">${dot(task.accent)}${esc(task.title)}</span>
+          <span class="trow__title">${marker(icons, task.accent, task.icon)}${esc(task.title)}</span>
           <span class="trow__meta">${runsNote}</span>
           <span class="trow__time">${duration(d, task.seconds)}</span>
           <span class="trow__share">${percent}%</span>
@@ -263,13 +318,13 @@ function hoursChart(d: ReportDict, bands: number[]): string {
   </section>`
 }
 
-function dayBreakdown(d: ReportDict, days: ReportDay[]): string {
+function dayBreakdown(d: ReportDict, days: ReportDay[], icons: IconClasses): string {
   const blocks = days
     .map((day) => {
       const rows = day.tasks
         .map(
           (task) => `<div class="drow">
-            <span class="drow__title">${dot(task.accent)}${esc(task.title)}</span>
+            <span class="drow__title">${marker(icons, task.accent, task.icon)}${esc(task.title)}</span>
             <span class="drow__dots"></span>
             <span class="drow__time">${duration(d, task.seconds)}</span>
           </div>`
@@ -287,7 +342,12 @@ function dayBreakdown(d: ReportDict, days: ReportDay[]): string {
   return `<section class="block"><h2>${d.byDays}</h2><div class="days">${blocks}</div></section>`
 }
 
-function sessionsTable(d: ReportDict, sessions: Session[], withYear: boolean): string {
+function sessionsTable(
+  d: ReportDict,
+  sessions: ReportSession[],
+  withYear: boolean,
+  icons: IconClasses
+): string {
   const shortDate = (iso: ISODate): string =>
     new Intl.DateTimeFormat(
       d.locale,
@@ -295,20 +355,32 @@ function sessionsTable(d: ReportDict, sessions: Session[], withYear: boolean): s
         ? { day: 'numeric', month: 'short', year: 'numeric' }
         : { day: 'numeric', month: 'short' }
     ).format(localDate(iso))
+  // A column of nothing is noise, and in a hand-written report it is always
+  // nothing: those lines were never running against a limit.
+  const anyLimit = sessions.some((s) => s.reachedLimit)
   const rows = sessions
     .map(
       (s) => `<tr>
         <td>${shortDate(s.date)}</td>
-        <td class="num">${clockTime(d.locale, s.startedAt)}–${clockTime(d.locale, s.endedAt)}</td>
-        <td>${dot(s.accent)}${esc(s.title)}</td>
+        <td class="num">${
+          s.untimed ? '<span class="dash">—</span>' : `${clockTime(d.locale, s.startedAt)}–${clockTime(d.locale, s.endedAt)}`
+        }</td>
+        <td>${marker(icons, s.accent, s.icon)}${esc(s.title)}${
+          s.description ? `<span class="rnote">${esc(s.description)}</span>` : ''
+        }</td>
         <td class="num">${compact(d, s.durationSec)}</td>
-        <td class="mark">${s.reachedLimit ? '✓' : ''}</td>
+        ${anyLimit ? `<td class="mark">${s.reachedLimit ? '✓' : '&nbsp;'}</td>` : ''}
       </tr>`
     )
     .join('')
+  // The tick cell is spaced rather than left empty: a genuinely empty last cell
+  // is laid out at its padding instead of its column, and every row then stops
+  // short of the right margin — which reads as a report cut off down its edge.
   return `<section class="block"><h2>${d.allRuns}</h2>
     <table class="sessions">
-      <thead><tr><th>${d.thDate}</th><th>${d.thTime}</th><th>${d.thTask}</th><th>${d.thDuration}</th><th>${d.thToLimit}</th></tr></thead>
+      <thead><tr><th>${d.thDate}</th><th>${d.thTime}</th><th>${d.thTask}</th><th>${d.thDuration}</th>${
+        anyLimit ? `<th class="mark">${d.thToLimit}</th>` : ''
+      }</tr></thead>
       <tbody>${rows}</tbody>
     </table>
   </section>`
@@ -320,6 +392,7 @@ function sessionsTable(d: ReportDict, sessions: Session[], withYear: boolean): s
 
 export function buildReportHtml(data: ReportData): string {
   const d = dictOf(data)
+  const { css: iconCss, classes: iconClasses } = iconStyles(data.icons)
   const period =
     data.from === data.to
       ? longDate(d.locale, data.from)
@@ -356,7 +429,10 @@ export function buildReportHtml(data: ReportData): string {
   header .total b { display: block; font-size: 30px; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
   header .total span { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: ${MUTED}; }
 
-  .kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 18px 0 6px; }
+  /* Inset by a hair: the printer clips at the content edge, and the last card's
+     right border sits exactly on it — drawn, then shaved away, so the row reads
+     as an open box. Nothing else on the page has a border to lose there. */
+  .kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 18px 0 6px; padding: 0 1px; }
   .kpi { border: 1px solid ${HAIRLINE}; border-radius: 10px; padding: 10px 12px; break-inside: avoid; }
   .kpi b { display: block; font-size: 17px; font-variant-numeric: tabular-nums; }
   .kpi span { font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; color: ${MUTED}; }
@@ -368,6 +444,13 @@ export function buildReportHtml(data: ReportData): string {
     padding-bottom: 6px; margin-bottom: 10px; border-bottom: 1px solid ${HAIRLINE};
   }
   .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
+  .mark {
+    display: inline-block; width: 15px; height: 15px; margin-right: 6px; vertical-align: -3px;
+    border-radius: 4px; background-repeat: no-repeat; background-position: center;
+    background-size: 11px 11px;
+  }
+  .mark--glyph { text-align: center; line-height: 15px; font-size: 11px; }
+  ${iconCss}
 
   .trow { padding: 7px 0 9px; break-inside: avoid; }
   .trow__head { display: flex; align-items: baseline; gap: 10px; }
@@ -402,10 +485,26 @@ export function buildReportHtml(data: ReportData): string {
   }
   .sessions td { padding: 4.5px 8px; border-bottom: 1px solid #f2f0f7; }
   .sessions tr:nth-child(even) td { background: #fafafc; }
-  .sessions td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sessions td.num { font-variant-numeric: tabular-nums; }
+  /* Every column is sized to its content and holds one line — except the task,
+     which is told to take everything that is left. Without that one greedy
+     column the table's own 100% and the sum of its columns disagree, and the
+     rows stop short of the right margin. */
+  .sessions th, .sessions td { white-space: nowrap; }
+  .sessions th:nth-child(3), .sessions td:nth-child(3) { width: 100%; white-space: normal; }
   .sessions td.mark { text-align: center; color: ${ACCENT_HEX.emerald}; }
+  .dash { color: ${MUTED}; }
+  /* The line's own note, indented under its title past the colour marker. */
+  /* pre-line keeps the line breaks someone typed into the note and still wraps
+     the long lines — the reason the field is a textarea at all. */
+  .rnote { display: block; margin: 1px 0 0 21px; color: ${MUTED}; font-size: 10px; line-height: 1.35; white-space: pre-line; }
   .sessions th:nth-child(4), .sessions td:nth-child(4) { text-align: right; }
-  .sessions th:last-child { text-align: center; }
+  /* Scoped to the tick column: as a :last-child rule this would centre the
+     duration heading over its right-aligned numbers whenever the tick column
+     is dropped. The width is pinned because auto layout sizes this column from
+     whichever of the heading or the ticks it feels like, and the loser then
+     spills over the table's right edge — off the page. */
+  .sessions th.mark, .sessions td.mark { width: 78px; text-align: center; }
 
   footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid ${HAIRLINE}; color: ${MUTED}; font-size: 10px; display: flex; justify-content: space-between; }
 </style>
@@ -423,10 +522,19 @@ export function buildReportHtml(data: ReportData): string {
   </header>
 
   ${kpis(data)}
-  ${taskTable(data)}
+  ${taskTable(data, iconClasses)}
   ${data.bands ? hoursChart(d, data.bands) : ''}
-  ${data.days ? dayBreakdown(d, data.days) : ''}
-  ${data.sessions ? sessionsTable(d, data.sessions, data.from.slice(0, 4) !== data.to.slice(0, 4)) : ''}
+  ${data.days ? dayBreakdown(d, data.days, iconClasses) : ''}
+  ${
+    data.sessions
+      ? sessionsTable(
+          d,
+          data.sessions,
+          data.from.slice(0, 4) !== data.to.slice(0, 4),
+          iconClasses
+        )
+      : ''
+  }
 
   <footer>
     <span>${d.generated(generated)}</span>

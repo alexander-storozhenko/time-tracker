@@ -7,10 +7,15 @@ import {
   BAND_HOURS,
   BAND_START_HOUR,
   DEFAULT_SETTINGS,
+  MANUAL_MAX_ENTRIES,
+  MANUAL_MAX_NAME,
   type Accent,
   type DayStats,
   type ExportInventory,
   type ISODate,
+  type ManualDraft,
+  type ManualReport,
+  type ManualReportSummary,
   type PersistedState,
   type QueueItem,
   type QueueSnapshot,
@@ -19,6 +24,7 @@ import {
   type TaskTotal,
   type Template
 } from '../shared/types'
+import { readDraft, readEntries, readName, totalSecOf } from './manual'
 
 let db: DatabaseSync
 
@@ -70,9 +76,21 @@ CREATE TABLE IF NOT EXISTS meta (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+
+-- A report written by hand, saved under a name. The lines live in one JSON
+-- column rather than a table of their own: they are a document, always read
+-- and written whole, and no query ever reaches inside them. The thing that
+-- gets queried is the session log, and this is deliberately not that.
+CREATE TABLE IF NOT EXISTS manual_reports (
+  id         TEXT PRIMARY KEY,
+  name       TEXT    NOT NULL,
+  entries    TEXT    NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
 `
 
-const SCHEMA_VERSION = 4
+const SCHEMA_VERSION = 5
 
 /** `ALTER TABLE ADD COLUMN` has no `IF NOT EXISTS`, so ask first. */
 function addColumn(table: string, column: string, definition: string): void {
@@ -299,6 +317,8 @@ export function open(): void {
   // and an old file that predates them would otherwise crash the boot.
   // `addColumn` asks PRAGMA table_info, so re-running is free on a fresh file.
   // v2 added the per-task over-limit behaviour; v3 the description; v4 the icon.
+  // v5 added `manual_reports`, which the schema above creates on its own — a
+  // whole new table needs no ALTER, so there is no step for it here.
   if (version < 2) {
     addColumn('templates', 'overrun', 'INTEGER NOT NULL DEFAULT 0')
     addColumn('queue_items', 'overrun', 'INTEGER NOT NULL DEFAULT 0')
@@ -636,6 +656,118 @@ export function saveQueue(snapshot: QueueSnapshot): void {
 
 export function saveSettings(settings: Settings): void {
   setMeta('settings', JSON.stringify(settings))
+}
+
+// ---------------------------------------------------------------------------
+// Reports written by hand
+// ---------------------------------------------------------------------------
+
+/**
+ * Hand-written reports are deliberately outside `sessions`: the statistics stay
+ * a record of measured time, not remembered time. What is stored is a document
+ * — a name and its lines — in its own table, plus the one draft the dialog is
+ * holding right now, which lives in `meta` because there is only ever one.
+ */
+export function loadManualDraft(): ManualDraft {
+  try {
+    const raw = getMeta('manualReport')
+    // A blob truncated by a crash mid-write costs the draft, not the launch.
+    return readDraft(raw ? JSON.parse(raw) : null)
+  } catch {
+    return { id: null, name: '', entries: [] }
+  }
+}
+
+export function saveManualDraft(draft: ManualDraft): void {
+  if (!isOpen()) return
+  const clean = readDraft(draft)
+  setMeta(
+    'manualReport',
+    JSON.stringify({ ...clean, entries: clean.entries.slice(0, MANUAL_MAX_ENTRIES) })
+  )
+}
+
+interface ManualReportRow {
+  id: string
+  name: string
+  entries: string
+  created_at: number
+  updated_at: number
+}
+
+/** A stored document whose JSON no longer parses is skipped, never thrown:
+ *  one damaged report must not take the whole list down with it. */
+function toManualReport(row: ManualReportRow): ManualReport | null {
+  try {
+    return {
+      id: row.id,
+      name: row.name,
+      entries: readEntries(JSON.parse(row.entries)),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }
+  } catch {
+    return null
+  }
+}
+
+/** The picker's list. The lines are parsed to count and sum them — a handful of
+ *  documents of a few dozen lines each, so there is nothing to denormalise. */
+export function manualReports(): ManualReportSummary[] {
+  return rows<ManualReportRow>(
+    db.prepare('SELECT * FROM manual_reports ORDER BY updated_at DESC').all()
+  )
+    .map(toManualReport)
+    .filter((report): report is ManualReport => report !== null)
+    .map((report) => ({
+      id: report.id,
+      name: report.name,
+      entryCount: report.entries.length,
+      totalSec: totalSecOf(report.entries),
+      updatedAt: report.updatedAt
+    }))
+}
+
+export function manualReport(id: string): ManualReport | null {
+  const row = one<ManualReportRow | undefined>(
+    db.prepare('SELECT * FROM manual_reports WHERE id = ?').get(id)
+  )
+  return row ? toManualReport(row) : null
+}
+
+/** Creates from a draft that has no id yet, updates one that has. Returns the
+ *  stored document, so the dialog learns the id it was just given. */
+export function storeManualReport(draft: ManualDraft): ManualReport {
+  const clean = readDraft(draft)
+  const now = Date.now()
+  const existing = clean.id === null ? null : manualReport(clean.id)
+  const report: ManualReport = {
+    // An id pointing at a report deleted from another window would otherwise
+    // update nothing; falling back to a new one saves the work instead.
+    id: existing?.id ?? crypto.randomUUID(),
+    name: readName(clean.name, new Date(now).toISOString().slice(0, 10)).slice(0, MANUAL_MAX_NAME),
+    entries: clean.entries.slice(0, MANUAL_MAX_ENTRIES),
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now
+  }
+  db.prepare(
+    `INSERT INTO manual_reports (id, name, entries, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       name = excluded.name, entries = excluded.entries, updated_at = excluded.updated_at`
+  ).run(
+    report.id,
+    report.name,
+    JSON.stringify(report.entries),
+    report.createdAt,
+    report.updatedAt
+  )
+  return report
+}
+
+export function deleteManualReport(id: string): void {
+  if (!isOpen()) return
+  db.prepare('DELETE FROM manual_reports WHERE id = ?').run(id)
 }
 
 /** The stored language choice alone — for the menu and reports in main. */

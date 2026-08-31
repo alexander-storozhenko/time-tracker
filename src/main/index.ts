@@ -3,13 +3,15 @@ import { join } from 'node:path'
 import type {
   ExportOptions,
   ISODate,
+  ManualDraft,
+  ManualExportOptions,
   QueueSnapshot,
   Session,
   Settings,
   Template
 } from '../shared/types'
 import * as db from './db'
-import { runExport } from './export'
+import { runExport, runManualExport } from './export'
 import { resolveAppLang } from './lang'
 
 /** Matches `--mz-bg` in dark, so the window never flashes white before React paints. */
@@ -154,6 +156,15 @@ app.whenReady().then(() => {
     db.exportInventory(range.from, range.to)
   )
   ipcMain.handle('export:run', (_e, options: ExportOptions) => runExport(mainWindow, options))
+  ipcMain.handle('manual:load', () => db.loadManualDraft())
+  ipcMain.handle('manual:save', (_e, draft: ManualDraft) => db.saveManualDraft(draft))
+  ipcMain.handle('manual:list', () => db.manualReports())
+  ipcMain.handle('manual:open', (_e, id: string) => db.manualReport(String(id)))
+  ipcMain.handle('manual:store', (_e, draft: ManualDraft) => db.storeManualReport(draft))
+  ipcMain.handle('manual:delete', (_e, id: string) => db.deleteManualReport(String(id)))
+  ipcMain.handle('export:manual', (_e, options: ManualExportOptions) =>
+    runManualExport(mainWindow, options)
+  )
   ipcMain.handle('sessions:deleteTask', (_e, p: { from: ISODate; to: ISODate; key: string }) =>
     db.deleteTaskSessions(p.from, p.to, p.key)
   )

@@ -19,15 +19,9 @@ import { ACCENTS, type Accent } from '@shared/types'
 import { tone } from '@/lib/accents'
 import { t } from '@/lib/i18n'
 import type { NewTemplate } from '@/lib/store'
-import { EmojiIcon } from './EmojiIcon'
+import { EmojiIcon, ICONS } from './EmojiIcon'
 
 const PRESETS = [15, 25, 50, 90]
-
-/** The macOS-flavoured shortlist: work, calls, writing, rest — and the poo. */
-const ICONS = [
-  '🧠', '💻', '🔍', '📞', '📥', '✍️', '📚', '🎨', '🧪', '🛠️', '🏃', '☕',
-  '📝', '📊', '💬', '🐛', '🚀', '🎯', '🔥', '⚡', '🧘', '🎧', '💤', '💩'
-] as const
 
 interface Props {
   open: boolean

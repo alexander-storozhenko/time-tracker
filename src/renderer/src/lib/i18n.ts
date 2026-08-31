@@ -159,6 +159,41 @@ export interface Dict {
   exporting: string
   exportBtn: string
 
+  // Report written by hand
+  sourceTracker: string
+  sourceManual: string
+  manualReportLabel: string
+  manualNamePlaceholder: string
+  manualDefaultName: (date: string) => string
+  manualUnsaved: string
+  manualSaved: string
+  manualLibraryAria: string
+  manualNewReport: string
+  manualNoReports: string
+  manualDeleteReportAria: (name: string) => string
+  manualSaveFailed: string
+  manualEntriesLabel: string
+  manualEmpty: string
+  manualNewEntry: string
+  manualEditEntry: string
+  manualTitlePlaceholder: string
+  manualTitleError: string
+  manualHoursError: (min: number, max: number) => string
+  manualHint: string
+  manualDateAria: string
+  manualStartAria: string
+  manualHoursAria: string
+  manualFrom: string
+  manualDescPlaceholder: string
+  manualDescAria: string
+  manualIconAria: string
+  manualColorAria: string
+  manualAdd: string
+  manualEditAria: (title: string) => string
+  manualDeleteAria: (title: string) => string
+  manualCount: (n: number) => string
+  manualNothing: string
+
   // Statistics panel
   todayEmptyText: string
   yesterdayEmptyText: string
@@ -285,9 +320,14 @@ const RU: Dict = {
   colorLabel: 'Цвет',
   accent: {
     amber: 'Янтарный',
-    violet: 'Фиолетовый',
+    lime: 'Лаймовый',
+    green: 'Зелёный',
     emerald: 'Изумрудный',
+    cyan: 'Бирюзовый',
     sky: 'Небесный',
+    blue: 'Синий',
+    violet: 'Фиолетовый',
+    fuchsia: 'Фуксия',
     rose: 'Розовый',
     slate: 'Серый'
   },
@@ -339,6 +379,41 @@ const RU: Dict = {
   deleteFailed: 'Не получилось удалить записи.',
   exporting: 'Экспортирую…',
   exportBtn: 'Экспортировать',
+
+  sourceTracker: 'Из трекера',
+  sourceManual: 'Вручную',
+  manualReportLabel: 'Отчёт',
+  manualNamePlaceholder: 'Название отчёта',
+  manualDefaultName: (date) => `Отчёт от ${date}`,
+  manualUnsaved: 'не сохранён',
+  manualSaved: 'сохранён',
+  manualLibraryAria: 'Сохранённые отчёты',
+  manualNewReport: 'Новый отчёт',
+  manualNoReports: 'Сохранённых отчётов пока нет.',
+  manualDeleteReportAria: (name) => `Удалить отчёт: ${name}`,
+  manualSaveFailed: 'Не получилось сохранить отчёт.',
+  manualEntriesLabel: 'Записи',
+  manualEmpty: 'Пока ни одной записи. Заполните форму ниже — отчёт соберётся из этих строк.',
+  manualNewEntry: 'Новая запись',
+  manualEditEntry: 'Изменить запись',
+  manualTitlePlaceholder: 'Например, созвон с командой',
+  manualTitleError: 'Введите название задачи.',
+  manualHoursError: (min, max) => `Укажите от ${min} до ${max} часов.`,
+  manualHint:
+    'Обязательны задача, дата и часы. Описание и время начала — по желанию: со временем запись встаёт в расписание дня и попадает в распределение по часам, без него остаются просто часы, а пустой график в отчёт не идёт. Дата, цвет и иконка переходят к следующей записи.',
+  manualDateAria: 'Дата записи',
+  manualStartAria: 'Время начала, необязательно',
+  manualHoursAria: 'Сколько часов',
+  manualFrom: 'с',
+  manualDescPlaceholder: 'Что именно сделано — попадёт в список подходов',
+  manualDescAria: 'Описание записи, необязательно',
+  manualIconAria: 'Иконка записи',
+  manualColorAria: 'Цвет записи',
+  manualAdd: 'Добавить',
+  manualEditAria: (title) => `Изменить запись: ${title}`,
+  manualDeleteAria: (title) => `Удалить запись: ${title}`,
+  manualCount: (n) => `${n} ${ruPlural(n, 'запись', 'записи', 'записей')}`,
+  manualNothing: 'Нет записей',
 
   todayEmptyText: 'Сегодня ещё ничего не отсчитано.',
   yesterdayEmptyText: 'Вчера записей нет.',
@@ -455,9 +530,14 @@ const EN: Dict = {
   colorLabel: 'Colour',
   accent: {
     amber: 'Amber',
-    violet: 'Violet',
+    lime: 'Lime',
+    green: 'Green',
     emerald: 'Emerald',
+    cyan: 'Cyan',
     sky: 'Sky',
+    blue: 'Blue',
+    violet: 'Violet',
+    fuchsia: 'Fuchsia',
     rose: 'Rose',
     slate: 'Slate'
   },
@@ -509,6 +589,41 @@ const EN: Dict = {
   deleteFailed: 'Could not delete the records.',
   exporting: 'Exporting…',
   exportBtn: 'Export',
+
+  sourceTracker: 'From the tracker',
+  sourceManual: 'By hand',
+  manualReportLabel: 'Report',
+  manualNamePlaceholder: 'Report name',
+  manualDefaultName: (date) => `Report of ${date}`,
+  manualUnsaved: 'unsaved',
+  manualSaved: 'saved',
+  manualLibraryAria: 'Saved reports',
+  manualNewReport: 'New report',
+  manualNoReports: 'No saved reports yet.',
+  manualDeleteReportAria: (name) => `Delete report: ${name}`,
+  manualSaveFailed: 'Could not save the report.',
+  manualEntriesLabel: 'Entries',
+  manualEmpty: 'No entries yet. Fill in the form below — the report is built from these lines.',
+  manualNewEntry: 'New entry',
+  manualEditEntry: 'Edit entry',
+  manualTitlePlaceholder: 'e.g. call with the team',
+  manualTitleError: 'Enter a task name.',
+  manualHoursError: (min, max) => `Enter ${min} to ${max} hours.`,
+  manualHint:
+    'The task, the date and the hours are required. The description and the start time are optional: with a time the entry takes its place in the day and in the hour chart, without one there are simply the hours, and an empty chart is left out of the report. The date, colour and icon carry over to the next entry.',
+  manualDateAria: 'Entry date',
+  manualStartAria: 'Start time, optional',
+  manualHoursAria: 'How many hours',
+  manualFrom: 'from',
+  manualDescPlaceholder: 'What was actually done — printed in the list of runs',
+  manualDescAria: 'Entry description, optional',
+  manualIconAria: 'Entry icon',
+  manualColorAria: 'Entry colour',
+  manualAdd: 'Add',
+  manualEditAria: (title) => `Edit entry: ${title}`,
+  manualDeleteAria: (title) => `Delete entry: ${title}`,
+  manualCount: (n) => `${n} ${n === 1 ? 'entry' : 'entries'}`,
+  manualNothing: 'No entries',
 
   todayEmptyText: 'Nothing logged yet today.',
   yesterdayEmptyText: 'No records yesterday.',

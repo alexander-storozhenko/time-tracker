@@ -5,6 +5,10 @@ import type {
   ExportOptions,
   ExportResult,
   ISODate,
+  ManualDraft,
+  ManualExportOptions,
+  ManualReport,
+  ManualReportSummary,
   PersistedState,
   QueueSnapshot,
   Session,
@@ -33,6 +37,19 @@ const api = {
     ipcRenderer.invoke('export:inventory', { from, to }),
   runExport: (options: ExportOptions): Promise<ExportResult> =>
     ipcRenderer.invoke('export:run', options),
+  /** Hand-written reports: their own store, never the session log. `manual:load`
+   *  and `manual:save` carry the one draft the dialog is holding; the rest are
+   *  the library of documents saved under a name. */
+  loadManual: (): Promise<ManualDraft> => ipcRenderer.invoke('manual:load'),
+  saveManual: (draft: ManualDraft): Promise<void> => ipcRenderer.invoke('manual:save', draft),
+  listManualReports: (): Promise<ManualReportSummary[]> => ipcRenderer.invoke('manual:list'),
+  openManualReport: (id: string): Promise<ManualReport | null> =>
+    ipcRenderer.invoke('manual:open', id),
+  storeManualReport: (draft: ManualDraft): Promise<ManualReport> =>
+    ipcRenderer.invoke('manual:store', draft),
+  deleteManualReport: (id: string): Promise<void> => ipcRenderer.invoke('manual:delete', id),
+  runManualExport: (options: ManualExportOptions): Promise<ExportResult> =>
+    ipcRenderer.invoke('export:manual', options),
   deleteTaskSessions: (from: ISODate, to: ISODate, key: string): Promise<number> =>
     ipcRenderer.invoke('sessions:deleteTask', { from, to, key }),
   revealPath: (path: string): void => ipcRenderer.send('reveal:path', path),

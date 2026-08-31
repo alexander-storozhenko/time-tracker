@@ -12,15 +12,24 @@ import {
   Input,
   Label,
   RadioGroup,
-  RadioGroupItem
+  RadioGroupItem,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
 } from '@morze/ui'
 import type { ExportResult, ExportTask, ISODate } from '@shared/types'
 import { tone } from '@/lib/accents'
 import { t } from '@/lib/i18n'
+import { reportIcons, useManualReports } from '@/lib/manual'
 import { toast } from '@/lib/toast'
 import { useStore } from '@/lib/store'
 import { formatCompact, formatDuration, shiftISO, todayISO } from '@/lib/time'
 import { FolderIcon, TrashIcon } from './icons'
+import { ManualReport } from './ManualReport'
+
+/** Where the report's numbers come from: the log, or a person's memory. */
+type Source = 'tracker' | 'manual'
 
 type Preset = 'today' | 'yesterday' | '7d' | '30d' | 'all' | 'custom'
 
@@ -50,6 +59,9 @@ interface Props {
 
 export function ExportDialog({ open, onOpenChange }: Props): React.JSX.Element {
   const { dispatch } = useStore()
+  const [source, setSource] = useState<Source>('tracker')
+  const manual = useManualReports(open)
+  const entries = manual.draft.entries
   const [preset, setPreset] = useState<Preset>('7d')
   const [customFrom, setCustomFrom] = useState<ISODate>(shiftISO(todayISO(), -6))
   const [customTo, setCustomTo] = useState<ISODate>(todayISO())
@@ -107,8 +119,12 @@ export function ExportDialog({ open, onOpenChange }: Props): React.JSX.Element {
   // over to whatever lands at the same position.
   useEffect(() => setArmedKey(null), [from, to])
 
+  // «Сохранено» belongs to the report it was written for; switching tabs makes
+  // it a claim about a file the other side never wrote.
+  useEffect(() => setResult(null), [source])
+
   useEffect(() => {
-    if (!open) return
+    if (!open || source !== 'tracker') return
     let cancelled = false
     window.tracker
       .exportInventory(from, to)
@@ -121,7 +137,7 @@ export function ExportDialog({ open, onOpenChange }: Props): React.JSX.Element {
     return () => {
       cancelled = true
     }
-  }, [open, from, to, inventoryVersion])
+  }, [open, source, from, to, inventoryVersion])
 
   const selected = tasks.filter((t) => !excluded.has(t.key))
   const selectedSec = selected.reduce((sum, t) => sum + t.seconds, 0)
@@ -168,19 +184,30 @@ export function ExportDialog({ open, onOpenChange }: Props): React.JSX.Element {
     return () => clearTimeout(id)
   }, [armedKey])
 
+  const manualSec = entries.reduce((sum, e) => sum + e.durationSec, 0)
+  const canExport = source === 'manual' ? entries.length > 0 : selected.length > 0
+
   const submit = async (): Promise<void> => {
     setBusy(true)
     setResult(null)
     try {
-      const res = await window.tracker.runExport({
-        format,
-        from,
-        to,
-        taskKeys: allSelected ? null : selected.map((t) => t.key),
-        includeSessions,
-        includeDays,
-        includeHours
-      })
+      const sections = { includeSessions, includeDays, includeHours }
+      const res =
+        source === 'manual'
+          ? await window.tracker.runManualExport({
+              format,
+              entries,
+              // Only the pictures this draft spends; the printer has no others.
+              icons: reportIcons(entries),
+              ...sections
+            })
+          : await window.tracker.runExport({
+              format,
+              from,
+              to,
+              taskKeys: allSelected ? null : selected.map((t) => t.key),
+              ...sections
+            })
       setResult(res)
     } catch (err) {
       console.error('[export] failed:', err)
@@ -192,107 +219,127 @@ export function ExportDialog({ open, onOpenChange }: Props): React.JSX.Element {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent closeLabel={t().close} style={{ width: 560, maxWidth: '94vw' }}>
+      <DialogContent
+        className="export-dialog"
+        closeLabel={t().close}
+        style={{ width: 600, maxWidth: '94vw' }}
+      >
         <DialogHeader>
           <DialogTitle>{t().exportTitle}</DialogTitle>
           <DialogDescription>{t().exportDesc}</DialogDescription>
         </DialogHeader>
 
-        <div className="form-grid" style={{ padding: 'var(--space-5) 0' }}>
-          <Field>
-            <Label>{t().period}</Label>
-            <div className="preset-row">
-              {PRESETS.map((key) => (
-                <Button
-                  key={key}
-                  type="button"
-                  size="xs"
-                  variant={preset === key ? 'primary' : 'outline'}
-                  onClick={() => setPreset(key)}
-                >
-                  {presetLabel(key)}
-                </Button>
-              ))}
-            </div>
-            {preset === 'custom' && (
-              <div className="export-dates">
-                <Input
-                  type="date"
-                  inputSize="sm"
-                  value={customFrom}
-                  max={today}
-                  aria-label={t().fromAria}
-                  onChange={(e) => setCustomFrom(e.target.value)}
-                />
-                <span aria-hidden="true">—</span>
-                <Input
-                  type="date"
-                  inputSize="sm"
-                  value={customTo}
-                  max={today}
-                  aria-label={t().toAria}
-                  onChange={(e) => setCustomTo(e.target.value)}
-                />
-              </div>
-            )}
-          </Field>
+        <div className="form-grid export-dialog__scroll">
+          <Tabs value={source} onValueChange={(value) => setSource(value as Source)}>
+            <TabsList>
+              <TabsTrigger value="tracker">{t().sourceTracker}</TabsTrigger>
+              <TabsTrigger value="manual">{t().sourceManual}</TabsTrigger>
+            </TabsList>
 
-          <Field>
-            <div className="export-tasks__head">
-              <Label>{t().tasksLabel}</Label>
-              <Button type="button" variant="ghost" size="xs" onClick={toggleAll} disabled={tasks.length === 0}>
-                {allSelected ? t().deselectAll : t().selectAll}
-              </Button>
-            </div>
-            {tasks.length === 0 ? (
-              <p className="empty" style={{ padding: 'var(--space-3)' }}>
-                {t().noRecords}
-              </p>
-            ) : (
-              <div className="export-tasks scroll-y">
-                {tasks.map((task) => (
-                  <label key={task.key} className="export-task" style={tone(task.accent)}>
-                    <Checkbox
-                      checked={!excluded.has(task.key)}
-                      onCheckedChange={() => toggleTask(task.key)}
-                      aria-label={task.title}
+            <TabsContent value="tracker" className="form-grid">
+              <Field>
+                <Label>{t().period}</Label>
+                <div className="preset-row">
+                  {PRESETS.map((key) => (
+                    <Button
+                      key={key}
+                      type="button"
+                      size="xs"
+                      variant={preset === key ? 'primary' : 'outline'}
+                      onClick={() => setPreset(key)}
+                    >
+                      {presetLabel(key)}
+                    </Button>
+                  ))}
+                </div>
+                {preset === 'custom' && (
+                  <div className="export-dates">
+                    <Input
+                      type="date"
+                      inputSize="sm"
+                      value={customFrom}
+                      max={today}
+                      aria-label={t().fromAria}
+                      onChange={(e) => setCustomFrom(e.target.value)}
                     />
-                    <i className="export-task__dot" aria-hidden="true" />
-                    <span className="export-task__title">{task.title}</span>
-                    <span className="export-task__time num">{formatCompact(task.seconds)}</span>
-                    {armedKey === task.key ? (
-                      <Button
-                        type="button"
-                        size="xs"
-                        variant="destructive"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          void removeTask(task)
-                        }}
-                      >
-                        {t().deleteConfirm}
-                      </Button>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label={t().deleteTaskAria(task.title)}
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          void removeTask(task)
-                        }}
-                      >
-                        <TrashIcon width={14} height={14} />
-                      </Button>
-                    )}
-                  </label>
-                ))}
-              </div>
-            )}
-          </Field>
+                    <span aria-hidden="true">—</span>
+                    <Input
+                      type="date"
+                      inputSize="sm"
+                      value={customTo}
+                      max={today}
+                      aria-label={t().toAria}
+                      onChange={(e) => setCustomTo(e.target.value)}
+                    />
+                  </div>
+                )}
+              </Field>
+
+              <Field>
+                <div className="export-tasks__head">
+                  <Label>{t().tasksLabel}</Label>
+                  <Button type="button" variant="ghost" size="xs" onClick={toggleAll} disabled={tasks.length === 0}>
+                    {allSelected ? t().deselectAll : t().selectAll}
+                  </Button>
+                </div>
+                {tasks.length === 0 ? (
+                  <p className="empty" style={{ padding: 'var(--space-3)' }}>
+                    {t().noRecords}
+                  </p>
+                ) : (
+                  <div className="export-tasks scroll-y">
+                    {tasks.map((task) => (
+                      <label key={task.key} className="export-task" style={tone(task.accent)}>
+                        <Checkbox
+                          checked={!excluded.has(task.key)}
+                          onCheckedChange={() => toggleTask(task.key)}
+                          aria-label={task.title}
+                        />
+                        <i className="export-task__dot" aria-hidden="true" />
+                        <span className="export-task__title">{task.title}</span>
+                        <span className="export-task__time num">{formatCompact(task.seconds)}</span>
+                        {armedKey === task.key ? (
+                          <Button
+                            type="button"
+                            size="xs"
+                            variant="destructive"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              void removeTask(task)
+                            }}
+                          >
+                            {t().deleteConfirm}
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            aria-label={t().deleteTaskAria(task.title)}
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              void removeTask(task)
+                            }}
+                          >
+                            <TrashIcon width={14} height={14} />
+                          </Button>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </Field>
+            </TabsContent>
+
+            <TabsContent value="manual">
+              {/* Remounted only when another document is loaded: a half-typed
+                  line belongs to the report it was being typed into. Saving is
+                  not such a moment — it must not clear the composer. */}
+              <ManualReport key={manual.revision} manual={manual} />
+            </TabsContent>
+          </Tabs>
 
           <div className="export-columns">
             <Field>
@@ -348,6 +395,12 @@ export function ExportDialog({ open, onOpenChange }: Props): React.JSX.Element {
               </>
             ) : result?.status === 'empty' ? (
               t().emptyPeriod
+            ) : source === 'manual' ? (
+              entries.length > 0 ? (
+                `${formatDuration(manualSec)} · ${t().manualCount(entries.length)}`
+              ) : (
+                t().manualNothing
+              )
             ) : selected.length > 0 ? (
               `${formatDuration(selectedSec)} · ${t().runsCount(selectedRuns)}`
             ) : (
@@ -357,7 +410,7 @@ export function ExportDialog({ open, onOpenChange }: Props): React.JSX.Element {
           <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
             {t().close}
           </Button>
-          <Button type="button" onClick={submit} disabled={busy || selected.length === 0}>
+          <Button type="button" onClick={submit} disabled={busy || !canExport}>
             {busy ? t().exporting : t().exportBtn}
           </Button>
         </DialogFooter>
